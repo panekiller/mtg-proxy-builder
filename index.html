@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v40.2</title>
+  <title>MTG Proxy Builder v40.3</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -1718,10 +1718,26 @@ async function preloadSymbols(card){
   }));
 }
 
-function loadArt(input,key){
-  const file=input.files?.[0];if(!file)return;
-  const url=URL.createObjectURL(file);const img=new Image();
-  img.onload=()=>{state[key]=img;URL.revokeObjectURL(url);scheduleRender()};img.src=url;
+async function fileToImage(file){
+  if(!file)return null;
+  const url=URL.createObjectURL(file);
+  try{
+    const img=new Image();
+    img.src=url;
+    await img.decode();
+    return img;
+  }finally{
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function loadArt(input,key){
+  const file=input.files?.[0];if(!file)return null;
+  const img=await fileToImage(file);
+  state[key]=img;
+  updateQuickUI?.();
+  scheduleRender();
+  return img;
 }
 
 function drawCover(c,img,W,H,filter='none'){
@@ -2723,14 +2739,17 @@ function resetV2Adjustments(){
 }
 
 function saveTemplate(){
-  const o={};Object.keys(defaults).forEach(k=>{const el=$(`#${k}`);if(el)o[k]=el.value});
-  ['fadeEnabled','autoGrow','autoFit','showGuides','showBleedGuide'].forEach(k=>{const el=$('#'+k);if(el)o[k]=el.checked});
+  const o={};Object.keys(defaults).forEach(k=>{const el=$(`#${k}`);if(el)o[k]=el.type==='checkbox'?el.checked:el.value});
+  ['fadeEnabled','autoGrow','autoFit','showGuides','showBleedGuide','frameGraphicsEnabled','linkOutlines','linkTextColors']
+    .forEach(k=>{const el=$('#'+k);if(el)o[k]=el.checked});
   o.artist=$('#artist').value;o.proxyLine=$('#proxyLine').value;
+  o.freeform={layers:state.freeform.layers.map(layer=>({...layer})),showGrid:state.freeform.showGrid,snapGrid:state.freeform.snapGrid,gridSize:state.freeform.gridSize};
   localStorage.setItem('mtgProxyTemplate_v8',JSON.stringify(o));$('#fetchStatus').textContent='Template saved in this browser.';
 }
 function applyProjectBaseline(){
-  Object.entries(defaults).forEach(([k,val])=>{const el=$(`#${k}`);if(el)el.value=val});
+  Object.entries(defaults).forEach(([k,val])=>{const el=$(`#${k}`);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val});
   $('#fadeEnabled').checked=true;$('#autoGrow').checked=true;$('#autoFit').checked=true;$('#showGuides').checked=true;if($('#showBleedGuide'))$('#showBleedGuide').checked=true;
+  updateModeSpecificControls?.();updateStandardPTControls?.();setFreeformMode?.();updateQuickUI?.();
   showOutputs();scheduleRender();
 }
 
@@ -2772,18 +2791,6 @@ function syncOutlineSliders(sourceId){
   outlineSyncing=true;
   const source=$('#'+sourceId);
   const value=source.value;
-  
-['nameColor','typeColor','rulesColor','footerColor','ptColor','proxyColor'].forEach(id=>{
-  const el=$('#'+id);
-  if(el) el.addEventListener('input',()=>syncTextColors(id));
-});
-if($('#linkTextColors')){
-  $('#linkTextColors').addEventListener('change',()=>{
-    if($('#linkTextColors').checked) syncTextColors('nameColor');
-    scheduleRender();
-  });
-}
-
 ['nameStroke','typeStroke','rulesStroke','footerStroke'].forEach(id=>{
     if(id===sourceId)return;
     const el=$('#'+id);
@@ -2792,6 +2799,15 @@ if($('#linkTextColors')){
   showOutputs();
   outlineSyncing=false;
 }
+
+['nameColor','typeColor','rulesColor','footerColor','ptColor','proxyColor'].forEach(id=>{
+  const el=$('#'+id);
+  if(el) el.addEventListener('input',()=>syncTextColors(id));
+});
+$('#linkTextColors')?.addEventListener('change',()=>{
+  if($('#linkTextColors').checked) syncTextColors('nameColor');
+  scheduleRender();
+});
 
 function resetCardStyleSettings(){
   if($('#cardStyle')) $('#cardStyle').value='borderless';
@@ -2862,7 +2878,13 @@ function resetTemplate(){applyProjectBaseline()}
 function loadTemplate(){
   try{
     const o=JSON.parse(localStorage.getItem('mtgProxyTemplate_v8')||'null');if(!o)return;
-    Object.entries(o).forEach(([k,val])=>{const el=$(`#${k}`);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val});
+    Object.entries(o).forEach(([k,val])=>{if(k==='freeform')return;const el=$(`#${k}`);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val});
+    if(o.freeform){
+      if(Array.isArray(o.freeform.layers))state.freeform.layers=o.freeform.layers.map(layer=>({...layer}));
+      state.freeform.showGrid=!!o.freeform.showGrid;state.freeform.snapGrid=!!o.freeform.snapGrid;
+      state.freeform.gridSize=Math.max(.25,Number(o.freeform.gridSize)||2.5);
+    }
+    updateModeSpecificControls();updateStandardPTControls();setFreeformMode();updateGridControls();renderLayersPanel();updateQuickUI();renderContextProperties();showOutputs();scheduleRender();
   }catch{}
 }
 
@@ -3190,10 +3212,13 @@ $('#resetStandardBorders')?.addEventListener('click',()=>{
 
 $('#cardStyle')?.addEventListener('change',()=>{setFreeformMode();updateModeSpecificControls();});
 $('#stdPTBoxEnabled')?.addEventListener('change',()=>{updateStandardPTControls();scheduleRender();});
-$('#fetchCard').onclick=loadCard;
-$('#art1').onchange=e=>loadArt(e.target,'art1');$('#art2').onchange=e=>loadArt(e.target,'art2');
-$('#exportV1').onclick=()=>downloadVersion(1);$('#exportV2').onclick=()=>downloadVersion(2);$('#exportBoth').onclick=exportBoth;
-$('#saveTemplate').onclick=saveTemplate;
+$('#fetchCard')?.addEventListener('click',loadCard);
+$('#art1')?.addEventListener('change',e=>loadArt(e.target,'art1'));
+$('#art2')?.addEventListener('change',e=>loadArt(e.target,'art2'));
+$('#exportV1')?.addEventListener('click',()=>downloadVersion(1));
+$('#exportV2')?.addEventListener('click',()=>downloadVersion(2));
+$('#exportBoth')?.addEventListener('click',exportBoth);
+$('#saveTemplate')?.addEventListener('click',saveTemplate);
 if($('#loadTemplateBtn')) $('#loadTemplateBtn').onclick=()=>{loadTemplate();showOutputs();scheduleRender();};
 if($('#resetV2')) $('#resetV2').onclick=resetV2Adjustments;
 if($('#resetCardStyle')) $('#resetCardStyle').onclick=resetCardStyleSettings;
@@ -3201,8 +3226,10 @@ if($('#resetPTBox')) $('#resetPTBox').onclick=resetPTBoxSettings;
 if($('#resetSection5')) $('#resetSection5').onclick=resetSection5Settings;
 if($('#resetLayout')) $('#resetLayout').onclick=resetLayout;
 if($('#resetFonts')) $('#resetFonts').onclick=resetFontsTextStyle;
-if($('#customFont')) $('#customFont').onchange=e=>loadCustomFont(e.target);$('#resetTemplate').onclick=resetTemplate;$('#applyBaseline').onclick=applyProjectBaseline;
-$('#dataLocked').onchange=syncFieldLock;
+$('#customFont')?.addEventListener('change',e=>loadCustomFont(e.target));
+$('#resetTemplate')?.addEventListener('click',resetTemplate);
+$('#applyBaseline')?.addEventListener('click',applyProjectBaseline);
+$('#dataLocked')?.addEventListener('change',syncFieldLock);
 $$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.version=+b.dataset.version;scheduleRender()});
 $$('input,textarea,select').forEach(el=>{if(!['art1','art2','scryfallUrl'].includes(el.id))el.addEventListener('input',()=>{showOutputs();scheduleRender()})});
 
