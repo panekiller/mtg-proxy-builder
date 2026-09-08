@@ -1,0 +1,3228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MTG Proxy Builder v40.2</title>
+  <style>
+:root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
+.topbar{height:82px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#0b0f14;position:sticky;top:0;z-index:20}.topbar h1{font-size:20px;margin:0 0 4px}.topbar p{margin:0;color:var(--muted);font-size:12px}.top-actions{display:flex;gap:8px}
+button{border:1px solid #3d8f59;background:#238636;color:white;border-radius:7px;padding:9px 12px;font-weight:700;cursor:pointer}button:hover{filter:brightness(1.1)}button.secondary{background:#21262d;border-color:var(--line)}
+.app-shell{display:grid;grid-template-columns:420px minmax(420px,1fr);min-height:calc(100vh - 82px)}.panel{background:var(--panel);border-right:1px solid var(--line)}.controls{padding:14px 16px 40px;overflow:auto;height:calc(100vh - 82px);position:sticky;top:82px}.controls section{border-bottom:1px solid var(--line);padding:8px 0 17px;margin-bottom:8px}.controls h2{font-size:14px;margin:8px 0 12px;color:#dbe5ef}
+label{display:block;color:#c9d1d9;font-size:12px;margin:8px 0}input,textarea{width:100%;margin-top:5px;background:#0d1117;color:white;border:1px solid var(--line);border-radius:6px;padding:8px}input[type=range]{padding:0;accent-color:var(--accent2)}input[type=file]{padding:6px}.inline{display:flex;gap:7px}.inline input{flex:1}.inline button{margin-top:5px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.check{display:flex;gap:7px;align-items:center}.check input{width:auto;margin:0}.hint,.status{font-size:11px;color:var(--muted);line-height:1.4}.status{padding:7px 0}.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.data-grid .wide{grid-column:1/-1}summary{cursor:pointer;color:#b6c2cf;font-size:12px;margin:9px 0}.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}output{float:right;color:#8bd5ff;font-variant-numeric:tabular-nums}
+.workspace{padding:18px;min-width:0}.version-tabs{display:flex;justify-content:center;gap:8px;margin-bottom:10px}.tab{background:#21262d;border-color:var(--line)}.tab.active{background:#1f6feb;border-color:#58a6ff}.canvas-stage{height:calc(100vh - 205px);min-height:560px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#252b35,#0b0e13 65%);border:1px solid var(--line);border-radius:12px;padding:18px;overflow:hidden}#cardCanvas{
+  max-height:100%;
+  max-width:100%;
+  box-shadow:
+    0 18px 50px #000,
+    0 0 0 1px rgba(255,255,255,.18),
+    0 0 22px rgba(210,225,255,.22),
+    0 0 48px rgba(180,205,255,.10);
+  border-radius:10px;
+  background:#111;
+  aspect-ratio:5/7
+}.qc-panel{margin-top:12px;border:1px solid var(--line);background:var(--panel2);border-radius:9px;padding:10px 12px;font-size:12px;color:#aeb9c4}.qc-panel>div:first-child{display:flex;gap:10px;align-items:center;margin-bottom:5px}.pill{padding:3px 8px;border-radius:999px;background:#30363d}.pill.ok{background:#183d26;color:#7ee787}.pill.warn{background:#4a3500;color:#e3b341}
+@media(max-width:900px){.app-shell{grid-template-columns:1fr}.controls{position:static;height:auto}.workspace{min-height:800px}.canvas-stage{height:720px}.topbar{position:static}.top-actions{display:none}}
+
+.wide-export{grid-column:1/-1;background:#1f6feb;border-color:#58a6ff}.data-grid input[readonly],.data-grid textarea[readonly]{opacity:.78;background:#10151b;border-color:#24313d}.top-actions{flex-wrap:wrap}.controls .check+ .check{margin-top:5px}
+
+.section-reset{margin:0 0 12px 0;} select{width:100%;padding:8px;border-radius:7px;border:1px solid #555;background:#191919;color:#eee;}
+
+.section-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin:0 0 12px 0;
+}
+.inline-check{
+  margin:0;
+}
+
+#cardStyle{font-weight:700;}
+
+input[type="color"]{
+  min-height:42px;
+  padding:3px;
+  cursor:pointer;
+}
+
+.highlight-note{font-size:.9em;opacity:.8}
+
+#highlightStatus{
+  margin:8px 0;
+  font-size:.9rem;
+}
+
+/* ---------- v24 Freeform ---------- */
+.app-shell.freeform-shell{
+  grid-template-columns:360px minmax(420px,1fr) 290px;
+}
+.freeform-only{display:none}
+.app-shell.freeform-shell .freeform-only{display:block}
+
+.layers-panel{
+  background:#11161d;
+  border-left:1px solid var(--line);
+  height:calc(100vh - 82px);
+  position:sticky;
+  top:82px;
+  overflow:auto;
+  padding:12px;
+}
+.layers-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:5px 2px 12px;
+  border-bottom:1px solid var(--line);
+}
+.layers-header>div{min-width:0}
+.layers-header strong{display:block;font-size:14px}
+.layers-header span{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.layers-header button{padding:6px 9px;font-size:11px}
+.layers-list{padding-top:8px}
+.layer-row{
+  display:grid;
+  grid-template-columns:30px 30px minmax(0,1fr) 26px 26px;
+  align-items:center;
+  gap:4px;
+  min-height:38px;
+  border:1px solid transparent;
+  border-radius:6px;
+  padding:3px 4px;
+  margin-bottom:3px;
+  background:#171d25;
+  user-select:none;
+}
+.layer-row:hover{background:#1c2430}
+.layer-row.selected{border-color:#58a6ff;background:#172b45}
+.layer-row.dragging{opacity:.45}
+.layer-row.drop-target{border-top-color:#58a6ff}
+.layer-row button{
+  padding:3px;
+  height:28px;
+  min-width:26px;
+  font-size:13px;
+  line-height:1;
+  background:transparent;
+  border-color:transparent;
+}
+.layer-row button:hover{background:#2a3441}
+.layer-name{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  cursor:pointer;
+  font-size:12px;
+}
+.layer-row.locked .layer-name::after{content:"  🔒";font-size:10px}
+.layers-help{color:var(--muted);font-size:10px;line-height:1.4;padding:10px 3px}
+
+.ff-selection-name{
+  font-weight:700;
+  font-size:13px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  background:#0d1117;
+  border-radius:6px;
+  margin-bottom:9px;
+}
+#cardCanvas.freeform-canvas{cursor:default}
+#cardCanvas.freeform-canvas.ff-can-drag{cursor:move}
+#cardCanvas.freeform-canvas.ff-locked{cursor:not-allowed}
+
+/* Collapse left menus in Freeform. Headings remain clickable. */
+.controls.freeform-mode > section:not(#freeformInspector):not(.ff-open) > *:not(h2){
+  display:none !important;
+}
+.controls.freeform-mode > section:not(#freeformInspector) > h2{
+  cursor:pointer;
+  padding:7px 6px;
+  margin:0;
+  border-radius:5px;
+}
+.controls.freeform-mode > section:not(#freeformInspector) > h2:hover{
+  background:#202731;
+}
+.controls.freeform-mode > section:not(#freeformInspector) > h2::after{
+  content:"▸";
+  float:right;
+  color:var(--muted);
+}
+.controls.freeform-mode > section.ff-open > h2::after{content:"▾"}
+
+@media(max-width:1250px){
+  .app-shell.freeform-shell{grid-template-columns:320px minmax(380px,1fr) 250px}
+}
+@media(max-width:980px){
+  .app-shell.freeform-shell{grid-template-columns:1fr}
+  .app-shell.freeform-shell .layers-panel{position:static;height:auto;border-left:0;border-top:1px solid var(--line)}
+}
+
+
+#cardCanvas:hover{
+  box-shadow:
+    0 18px 50px #000,
+    0 0 0 1px rgba(255,255,255,.24),
+    0 0 28px rgba(210,225,255,.28),
+    0 0 56px rgba(180,205,255,.13);
+}
+
+.grid-controls{border-top:1px solid var(--line);margin-top:10px;padding:12px 3px 4px}.grid-controls-title{font-size:12px;font-weight:800;margin-bottom:7px;color:#dbe5ef}#freeformInspector .ff-size-disabled{opacity:.42;pointer-events:none}
+
+
+.ff-nudge-wrap{
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:#0d1117;
+  padding:9px;
+  margin:8px 0 10px;
+}
+.ff-nudge-title{
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:7px;
+}
+.ff-nudge-pad{
+  display:grid;
+  grid-template-columns:34px 34px 34px;
+  grid-template-rows:32px 32px;
+  justify-content:start;
+  gap:4px;
+  margin-bottom:8px;
+}
+.ff-nudge-pad button{
+  padding:0;
+  min-width:34px;
+  height:32px;
+  font-size:17px;
+  line-height:1;
+}
+#ffNudgeUp{grid-column:2;grid-row:1}
+#ffNudgeLeft{grid-column:1;grid-row:2}
+#ffNudgeDown{grid-column:2;grid-row:2}
+#ffNudgeRight{grid-column:3;grid-row:2}
+
+
+.frame-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.frame-upload-grid input[type=file]{font-size:10px}
+#standardBorderColors{border:1px solid var(--line);border-radius:7px;padding:7px 9px;margin-top:10px;background:#10151b}
+
+.preset-swatches{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:4px;
+  margin:4px 0 9px;
+}
+.preset-swatch{
+  height:18px;
+  border-radius:4px;
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.mode-hidden{display:none !important}
+
+/* ===========================
+   v40 — UI Foundation
+   =========================== */
+.ui-v40-topbar{height:70px;padding:10px 16px}
+.ui-v40-topbar .brand-block h1{font-size:18px;margin:0 0 2px}
+.ui-v40-topbar .brand-block p{font-size:11px}
+.ui-main-actions{gap:7px;align-items:center}
+.primary-new{background:#1f6feb;border-color:#58a6ff}
+.ui-v40-shell{
+  grid-template-columns:260px minmax(460px,1fr) 320px !important;
+  min-height:calc(100vh - 70px);
+}
+.project-sidebar{
+  background:#11161d;
+  border-right:1px solid var(--line);
+  height:calc(100vh - 70px);
+  position:sticky;
+  top:70px;
+  overflow:auto;
+  padding:14px 12px 28px;
+}
+.sidebar-title{padding:2px 3px 12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.sidebar-title strong{display:block;font-size:14px}
+.sidebar-title span{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.project-card{padding:10px 3px 13px;border-bottom:1px solid var(--line)}
+.project-card-title{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#dbe5ef;margin-bottom:8px}
+.project-card label{font-size:11px}
+.project-button-stack{display:grid;gap:6px}
+.wide-button{width:100%}
+.mini-status{font-size:10px;color:var(--muted);line-height:1.35;margin-top:7px}
+.workspace{padding:12px;min-width:0}
+.canvas-stage{height:calc(100vh - 175px);min-height:540px;padding:14px}
+.canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center;max-height:100%;max-width:100%;height:100%;width:100%}
+#cardCanvas{position:relative;z-index:1}
+.selection-overlay{
+  display:none;
+  position:absolute;
+  z-index:4;
+  pointer-events:none;
+  border:2px solid #58a6ff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.9),0 0 16px rgba(88,166,255,.35);
+  border-radius:4px;
+}
+.selection-overlay::after{
+  content:attr(data-label);
+  position:absolute;
+  left:-2px;
+  top:-25px;
+  background:#0b1624;
+  color:#fff;
+  border:1px solid #58a6ff;
+  border-radius:4px;
+  padding:3px 6px;
+  font:700 10px system-ui;
+  white-space:nowrap;
+}
+.ui-inspector-panel{
+  display:block !important;
+  background:#11161d;
+  border-left:1px solid var(--line);
+  height:calc(100vh - 70px);
+  position:sticky;
+  top:70px;
+  overflow:auto;
+  padding:0;
+}
+.inspector-tabs{display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:3;background:#0e1319;border-bottom:1px solid var(--line)}
+.inspector-tab{border:0;border-radius:0;background:#0e1319;color:#9ba7b4;padding:11px 8px}
+.inspector-tab.active{background:#17202b;color:#fff;box-shadow:inset 0 -2px #58a6ff}
+.inspector-pane{display:none;padding:12px}
+.inspector-pane.active{display:block}
+.properties-header{padding:4px 2px 11px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.properties-header strong{display:block;font-size:14px}
+.properties-header span{display:block;font-size:10px;color:var(--muted);margin-top:4px;line-height:1.35}
+.context-properties .property-group{border:1px solid var(--line);background:#0d1117;border-radius:8px;padding:9px;margin-bottom:9px}
+.context-properties .property-group-title{font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;color:#9fb4c8;margin-bottom:7px}
+.context-properties label{font-size:11px}
+.context-properties textarea{min-height:120px;resize:vertical}
+.context-properties .property-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.context-properties .property-button{width:100%;margin-top:5px}
+.context-properties .note{font-size:10px;color:var(--muted);line-height:1.4}
+.layers-header{margin-top:3px}
+#layersPane .grid-controls{display:none}
+.ui-v40-shell.freeform-shell #layersPane .grid-controls{display:block}
+.advanced-drawer{
+  position:fixed !important;
+  z-index:60;
+  left:0;
+  top:70px !important;
+  width:min(430px,92vw);
+  height:calc(100vh - 70px) !important;
+  transform:translateX(-102%);
+  transition:transform .2s ease;
+  box-shadow:16px 0 40px rgba(0,0,0,.45);
+  overflow:auto;
+}
+.advanced-drawer.open{transform:translateX(0)}
+.drawer-backdrop{
+  display:none;position:fixed;inset:70px 0 0;z-index:55;background:rgba(0,0,0,.48)
+}
+.drawer-backdrop.open{display:block}
+.controls.freeform-mode > section:not(#freeformInspector):not(.ff-open) > *:not(h2){display:block !important}
+.controls.freeform-mode > section:not(#freeformInspector) > h2::after{content:""}
+.wizard-backdrop{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(3,7,12,.82);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  backdrop-filter:blur(5px);
+}
+.wizard-backdrop.hidden{display:none}
+.wizard-card{
+  width:min(860px,96vw);max-height:92vh;overflow:auto;
+  background:#111820;border:1px solid #334155;border-radius:16px;
+  box-shadow:0 24px 90px rgba(0,0,0,.7);
+  padding:24px;
+}
+.wizard-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;color:#58a6ff}
+.wizard-card h2{font-size:26px;margin:5px 0 4px}
+.wizard-subtitle{margin:0 0 20px;color:var(--muted);font-size:12px}
+.wizard-step{margin-top:18px}
+.wizard-step-title{font-size:12px;font-weight:800;margin-bottom:8px;color:#dbe5ef}
+.wizard-step-title span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#1f6feb;margin-right:6px}
+.wizard-step-title em{font-style:normal;font-weight:500;color:var(--muted);margin-left:6px}
+.choice-grid{display:grid;gap:8px}
+.style-choice-grid{grid-template-columns:repeat(4,1fr)}
+.type-choice-grid{grid-template-columns:repeat(5,1fr)}
+.choice-card{
+  display:block;position:relative;margin:0;padding:12px;
+  border:1px solid #303943;border-radius:9px;background:#0d1218;cursor:pointer;
+}
+.choice-card:hover{border-color:#51677c;background:#111a24}
+.choice-card input{position:absolute;opacity:0;pointer-events:none}
+.choice-card:has(input:checked){border-color:#58a6ff;background:#14253a;box-shadow:inset 0 0 0 1px #58a6ff}
+.choice-card strong{display:block;font-size:12px}
+.choice-card small{display:block;color:var(--muted);font-size:10px;line-height:1.3;margin-top:4px}
+.choice-card.compact{padding:10px}
+.wizard-actions{display:flex;justify-content:flex-end;margin-top:22px}
+.wizard-actions button{min-width:160px;background:#1f6feb;border-color:#58a6ff;position:relative;z-index:2;pointer-events:auto}
+@media(max-width:1180px){
+  .ui-v40-shell{grid-template-columns:220px minmax(420px,1fr) 280px !important}
+}
+@media(max-width:900px){
+  .ui-v40-shell{grid-template-columns:1fr !important}
+  .project-sidebar,.ui-inspector-panel{position:static;height:auto;top:auto}
+  .project-sidebar{border-right:0;border-bottom:1px solid var(--line)}
+  .ui-inspector-panel{border-left:0;border-top:1px solid var(--line)}
+  .style-choice-grid{grid-template-columns:1fr 1fr}
+  .type-choice-grid{grid-template-columns:1fr 1fr}
+}
+
+</style>
+</head>
+<body>
+  
+<header class="topbar ui-v40-topbar">
+  <div class="brand-block">
+    <h1>MTG Proxy Builder</h1>
+    <p id="topbarCardStatus">New card · choose a card setup to begin</p>
+  </div>
+  <div class="top-actions ui-main-actions">
+    <button id="startNewCard" class="primary-new">＋ Start New Card</button>
+    <button id="toggleAdvanced" class="secondary">Advanced Controls</button>
+    <button id="quickExport" class="secondary">Export</button>
+  </div>
+</header>
+
+
+  
+<main class="app-shell ui-v40-shell">
+  <aside id="projectSidebar" class="project-sidebar">
+    <div class="sidebar-title">
+      <strong>Project</strong>
+      <span>Card setup and source files</span>
+    </div>
+
+    <section class="project-card">
+      <div class="project-card-title">Card setup</div>
+      <label>Style
+        <select id="quickCardStyle" onchange="quickStyleDirect(this.value)">
+          <option value="standard">Standard Frame</option>
+          <option value="borderless">Borderless Overlay</option>
+          <option value="fullart">Full Art</option>
+          <option value="freeform">Freeform</option>
+        </select>
+      </label>
+      <label>Card type
+        <select id="quickCardType" onchange="quickTypeDirect(this.value)">
+          <option value="legendary-creature">Legendary Creature</option>
+          <option value="creature">Creature</option>
+          <option value="enchantment">Enchantment</option>
+          <option value="artifact">Artifact</option>
+          <option value="instant">Instant</option>
+          <option value="sorcery">Sorcery</option>
+          <option value="planeswalker">Planeswalker</option>
+          <option value="land">Land</option>
+          <option value="battle">Battle</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label>Frame preset
+        <select id="quickFramePreset" onchange="quickPresetDirect(this.value)">
+          <option value="custom">Custom / unchanged</option>
+          <option value="white">White</option>
+          <option value="blue">Blue</option>
+          <option value="black">Black</option>
+          <option value="red">Red</option>
+          <option value="green">Green</option>
+          <option value="gold">Multicolor / Gold</option>
+          <option value="artifact">Artifact</option>
+          <option value="land">Land</option>
+          <option value="colorless">Colorless / Neutral</option>
+        </select>
+      </label>
+      <button id="reopenSetup" type="button" class="secondary wide-button" onclick="openNewCardWizard(false)">Change setup…</button>
+    </section>
+
+    <section class="project-card">
+      <div class="project-card-title">Scryfall card</div>
+      <label>Exact printing URL
+        <input id="quickScryfallUrl" type="url" oninput="quickScryfallDirect(this.value)" placeholder="https://scryfall.com/card/..." />
+      </label>
+      <button id="quickFetchCard" type="button" class="wide-button" onclick="quickFetchCardDirect()">Fetch Card</button>
+      <div id="quickFetchStatus" class="mini-status">No card loaded.</div>
+    </section>
+
+    <section class="project-card">
+      <div class="project-card-title">Artwork</div>
+      <label>Version 1 — Original Art
+        <input id="quickArt1Input" type="file" accept="image/*" onchange="quickArtDirect(this,'art1')" />
+      </label>
+      <label>Version 2 — Tweaked Art
+        <input id="quickArt2Input" type="file" accept="image/*" onchange="quickArtDirect(this,'art2')" />
+      </label>
+      <div id="quickArtStatus" class="mini-status">No artwork loaded.</div>
+    </section>
+
+    <section class="project-card">
+      <div class="project-card-title">Project tools</div>
+      <div class="project-button-stack">
+        <button id="quickSaveTemplate" type="button" class="secondary" onclick="saveTemplate()">Save Template</button>
+        <button id="quickLoadTemplate" type="button" class="secondary" onclick="loadTemplate();showOutputs();scheduleRender();updateQuickUI()">Load Template</button>
+        <button id="quickBaseline" type="button" class="secondary" onclick="applyProjectBaseline();updateQuickUI();renderContextProperties()">Project Baseline</button>
+      </div>
+    </section>
+  </aside>
+
+    <aside id="advancedDrawer" class="panel controls advanced-drawer">
+      <section>
+        <h2>1. Card data</h2>
+        <label>Scryfall URL
+          <div class="inline">
+            <input id="scryfallUrl" type="url" placeholder="https://scryfall.com/card/..." />
+            <button id="fetchCard">Fetch</button>
+          </div>
+        </label>
+        <div id="fetchStatus" class="status">Paste an exact Scryfall printing URL.</div>
+        <label class="check"><input id="dataLocked" type="checkbox" checked /> Lock fetched Scryfall data</label>
+        <details>
+          <summary>Locked card data</summary>
+          <div class="data-grid">
+            <label>Name <input id="cardName" /></label>
+            <label>Mana <input id="manaCost" /></label>
+            <label>Type <input id="typeLine" /></label>
+            <label>Power / Toughness <input id="pt" /></label>
+            <label>Collector <input id="collector" /></label>
+            <label>Set / Lang / Rarity <input id="setLine" /></label>
+            <label class="wide">Oracle text <textarea id="oracleText" rows="8"></textarea></label>
+          </div>
+          <p class="hint">Fetched values are the source of truth. Editing is available for custom cards, but exact Scryfall cards should be left unchanged.</p>
+        </details>
+      </section>
+
+      <section>
+        <h2>2. Artwork</h2>
+        <label>Version 1 — Original Art <input id="art1" type="file" accept="image/*" /></label>
+        <label>Version 2 — Tweaked Art <input id="art2" type="file" accept="image/*" /></label>
+        <p class="hint">If Version 2 is empty, it uses Version 1 with the optional non-destructive filter controls below.</p>
+        <div class="two-col">
+          <label>Art zoom <input id="artZoom" type="range" min="1" max="2" step="0.01" value="1" /><output></output></label>
+          <label>Art X <input id="artX" type="range" min="-35" max="35" step="0.5" value="0" /><output></output></label>
+          <label>Art Y <input id="artY" type="range" min="-35" max="35" step="0.5" value="0" /><output></output></label>
+          <label>V2 contrast <input id="v2Contrast" type="range" min="80" max="130" step="1" value="104" /><output></output></label>
+          <label>V2 saturation <input id="v2Saturation" type="range" min="70" max="140" step="1" value="97" /><output></output></label>
+          <label>V2 brightness <input id="v2Brightness" type="range" min="80" max="125" step="1" value="100" /><output></output></label>
+          <button id="resetV2" type="button" class="secondary">Reset V2 adjustments</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>3. Card style</h2>
+        <label>Card style
+          <select id="cardStyle">
+            <option value="borderless">Borderless Overlay</option>
+            <option value="fullart">Full Art</option>
+            <option value="standard">Standard Frame</option>
+            <option value="freeform">Freeform</option>
+          </select>
+        </label>
+        <button id="resetCardStyle" type="button" class="secondary section-reset">Reset Card Style</button>
+        <div class="two-col">
+          <label>Panel opacity <input id="panelOpacity" type="range" min="0" max="100" step="1" value="78" /><output></output></label>
+          <label>Frame opacity <input id="frameOpacity" type="range" min="0" max="100" step="1" value="94" /><output></output></label>
+          <label>Panel / Text Y <input id="stylePanelY" type="range" min="-15" max="15" step="0.25" value="0" /><output></output></label>
+          <label>Type → Rules gap <input id="typeRulesGap" type="range" min="0" max="8" step="0.1" value="1.2" /><output></output></label>
+          <label>Panel color <input id="panelColor" type="color" value="#08080a" /></label>
+          <label>Panel border color <input id="panelBorderColor" type="color" value="#000000" /></label>
+          <label>Panel border thickness <input id="panelBorderWidth" type="range" min="0" max="1.5" step="0.05" value="0" /><output></output></label>
+        </div>
+        <p class="hint">Borderless Overlay is the current project style. Full Art keeps full-card artwork with translucent information panels. Standard Frame uses an art window and separate rules area. Freeform lets you select, drag, lock, hide, and layer every major card element.</p>
+      </section>
+
+      <section id="frameGraphicsSection">
+        <h2>3B. Frame graphics</h2>
+        <p class="hint">Upload transparent PNG/WebP overlays for individual frame pieces. These are available in Freeform, Full Art, and Standard. Use transparent graphics so artwork/text can show through.</p>
+        <div class="frame-upload-grid">
+          <label>Whole-card frame <input id="frameWholeUpload" type="file" accept="image/png,image/webp,image/*" /></label>
+          <label>Title / name frame <input id="frameTitleUpload" type="file" accept="image/png,image/webp,image/*" /></label>
+          <label>Artwork frame <input id="frameArtUpload" type="file" accept="image/png,image/webp,image/*" /></label>
+          <label>Type-line frame <input id="frameTypeUpload" type="file" accept="image/png,image/webp,image/*" /></label>
+          <label>Rules frame <input id="frameRulesUpload" type="file" accept="image/png,image/webp,image/*" /></label>
+          <label>P/T frame <input id="framePTUpload" type="file" accept="image/png,image/webp,image/*" /></label>
+        </div>
+        <div class="two-col">
+          <label>Frame graphic opacity <input id="frameGraphicOpacity" type="range" min="0" max="100" step="1" value="100" /><output></output></label>
+          <label class="check"><input id="frameGraphicsEnabled" type="checkbox" checked /> Show uploaded frame graphics</label>
+        </div>
+        <button id="clearFrameGraphics" type="button" class="secondary section-reset">Clear Frame Graphics</button>
+
+        <details id="standardBorderColors">
+          <summary>Standard card border colors</summary>
+
+          <label>MTG frame preset
+            <select id="stdFramePreset">
+              <option value="custom">Custom</option>
+              <option value="white">White</option>
+              <option value="blue">Blue</option>
+              <option value="black">Black</option>
+              <option value="red">Red</option>
+              <option value="green">Green</option>
+              <option value="gold">Multicolor / Gold</option>
+              <option value="artifact">Artifact</option>
+              <option value="land">Land</option>
+              <option value="colorless">Colorless / Neutral</option>
+            </select>
+          </label>
+          <div id="stdPresetSwatches" class="preset-swatches"></div>
+          <p class="hint">Presets are visually matched starting points, not official Wizards hex values. After applying one, every border color below remains fully editable.</p>
+
+          <div class="two-col">
+            <label>Outer frame <input id="stdOuterColor" type="color" value="#1c1b19" /></label>
+            <label>Title border <input id="stdTitleBorderColor" type="color" value="#08080a" /></label>
+            <label>Artwork border <input id="stdArtBorderColor" type="color" value="#08080a" /></label>
+            <label>Type border <input id="stdTypeBorderColor" type="color" value="#08080a" /></label>
+            <label>Rules border <input id="stdRulesBorderColor" type="color" value="#08080a" /></label>
+            <label>P/T border <input id="stdPTBorderColor" type="color" value="#08080a" /></label>
+          </div>
+          <label>Border thickness <input id="stdBorderWidth" type="range" min="0" max="2.5" step="0.05" value="0.35" /><output></output></label>
+
+          <label class="check"><input id="stdPTBoxEnabled" type="checkbox" checked /> Show Standard P/T box</label>
+          <div id="stdPTBoxControls" class="two-col">
+            <label>P/T box fill <input id="stdPTFillColor" type="color" value="#c9c0a8" /></label>
+            <label>P/T box opacity <input id="stdPTFillOpacity" type="range" min="0" max="100" step="1" value="100" /><output></output></label>
+          </div>
+
+          <details id="standardTextFineTune">
+            <summary>Standard text fine tuning</summary>
+            <p class="hint">These offsets move the text inside its Standard-frame box without moving the box itself. Positive X moves right; positive Y moves down.</p>
+            <div class="two-col">
+              <label>Name X <input id="stdNameX" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Name Y <input id="stdNameY" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Mana X <input id="stdManaX" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Mana Y <input id="stdManaY" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Type X <input id="stdTypeX" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Type Y <input id="stdTypeY" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Rules X <input id="stdRulesX" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Rules Y <input id="stdRulesY" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Footer X <input id="stdFooterX" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>Footer Y <input id="stdFooterYOffset" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>P/T X <input id="stdPTX" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+              <label>P/T Y <input id="stdPTYOffset" type="range" min="-5" max="5" step="0.05" value="0" /><output></output></label>
+            </div>
+            <button id="resetStandardTextTune" type="button" class="secondary section-reset">Reset Standard Text Positions</button>
+          </details>
+
+          <button id="resetStandardBorders" type="button" class="secondary section-reset">Reset Standard Border Colors</button>
+        </details>
+      </section>
+
+      <section id="freeformInspector" class="freeform-only">
+        <h2>Freeform selection</h2>
+        <div id="ffSelectionName" class="ff-selection-name">Nothing selected</div>
+        <label class="check"><input id="ffSelectedLocked" type="checkbox" /> Lock selected layer</label>
+
+        <div class="ff-nudge-wrap">
+          <div class="ff-nudge-title">Nudge selection</div>
+          <div class="ff-nudge-pad">
+            <button id="ffNudgeUp" type="button" title="Nudge up">↑</button>
+            <button id="ffNudgeLeft" type="button" title="Nudge left">←</button>
+            <button id="ffNudgeDown" type="button" title="Nudge down">↓</button>
+            <button id="ffNudgeRight" type="button" title="Nudge right">→</button>
+          </div>
+          <label>Nudge amount
+            <select id="ffNudgeAmount">
+              <option value="0.1">0.1%</option>
+              <option value="0.25" selected>0.25%</option>
+              <option value="0.5">0.5%</option>
+              <option value="1">1%</option>
+            </select>
+          </label>
+          <p class="hint">Keyboard: Arrow keys nudge. Shift + Arrow = 1%. Alt + Arrow = 0.1%.</p>
+        </div>
+
+        <div class="two-col">
+          <label>X <input id="ffSelectedX" type="range" min="-20" max="120" step="0.25" value="0" /><output></output></label>
+          <label>Y <input id="ffSelectedY" type="range" min="-20" max="120" step="0.25" value="0" /><output></output></label>
+          <label id="ffFontSizeLabel">Font size <input id="ffSelectedFontSize" type="range" min="0.6" max="10" step="0.05" value="3" /><output></output></label>
+          <label id="ffWidthLabel">Text box width <input id="ffSelectedW" type="range" min="10" max="95" step="0.25" value="89.5" /><output></output></label>
+          <label id="ffHeightLabel">Text box height <input id="ffSelectedH" type="range" min="5" max="60" step="0.25" value="22" /><output></output></label>
+        </div>
+        <p id="ffSizeHint" class="hint">Font size works independently for each text layer. Width and height apply to the Rules Text layer.</p>
+        <p class="hint">Drag unlocked objects directly on the card. Use the Layers panel on the right to select, hide, lock, or reorder them.</p>
+      </section>
+
+      <section>
+        <h2>4. Layout</h2>
+        <button id="resetLayout" type="button" class="secondary section-reset">Reset Layout</button>
+        <label class="check"><input id="autoGrow" type="checkbox" checked /> Bottom-anchor text and grow upward</label>
+        <label class="check"><input id="autoFit" type="checkbox" checked /> Auto-fit very long cards by shrinking rules text only</label>
+        <label class="check"><input id="showGuides" type="checkbox" checked /> Show layout guides</label>
+        <label class="check"><input id="showBleedGuide" type="checkbox" checked /> Show 0.65 mm edge guide</label>
+        <p class="hint">The edge guide is inset 0.65 mm from a standard 63 × 88 mm MTG card edge and is preview-only.</p>
+        <div class="two-col">
+          <label>Block bottom <input id="blockBottom" type="range" min="65" max="90" step="0.25" value="87" /><output></output></label>
+          <label>Manual block Y <input id="blockNudge" type="range" min="-15" max="15" step="0.25" value="-2.5" /><output></output></label>
+          <label>Top limit <input id="topLimit" type="range" min="15" max="55" step="0.5" value="36" /><output></output></label>
+          <label>Minimum rules size <input id="minRulesSize" type="range" min="1.4" max="3.5" step="0.05" value="2.0" /><output></output></label>
+          <label>Left margin <input id="leftMargin" type="range" min="2" max="12" step="0.25" value="5.25" /><output></output></label>
+          <label>Right margin <input id="rightMargin" type="range" min="2" max="12" step="0.25" value="5.25" /><output></output></label>
+          <label>Name size <input id="nameSize" type="range" min="3" max="7" step="0.05" value="3.75" /><output></output></label>
+          <label>Type size <input id="typeSize" type="range" min="2" max="5" step="0.05" value="2.5" /><output></output></label>
+          <label>Rules size <input id="rulesSize" type="range" min="2" max="5" step="0.05" value="2.35" /><output></output></label>
+          <label>Line height <input id="lineHeight" type="range" min="1" max="1.8" step="0.02" value="1.22" /><output></output></label>
+          <label>Paragraph gap <input id="paraGap" type="range" min="0" max="3" step="0.05" value="0.95" /><output></output></label>
+          <label>Mana size <input id="manaSize" type="range" min="2" max="7" step="0.05" value="3.2" /><output></output></label>
+          <label>Mana gap <input id="manaGap" type="range" min="0" max="3" step="0.05" value="0.45" /><output></output></label>
+          <label>Footer size <input id="footerSize" type="range" min="1" max="3.5" step="0.05" value="1.35" /><output></output></label>
+          <label>P/T size <input id="ptSize" type="range" min="2" max="7" step="0.05" value="3.85" /><output></output></label>
+          <label>P/T Y <input id="ptY" type="range" min="78" max="96" step="0.25" value="88" /><output></output></label>
+          <label>Footer Y <input id="footerY" type="range" min="84" max="97" step="0.25" value="92" /><output></output></label>
+          <label>Proxy Y <input id="proxyY" type="range" min="90" max="99" step="0.25" value="96.75" /><output></output></label>
+        </div>
+      </section>
+
+      <section id="blackFadeSection">
+        <h2>5. Black fade</h2>
+<button id="resetSection5" type="button" class="secondary section-reset">Reset Section 5</button>
+        <label class="check"><input id="fadeEnabled" type="checkbox" checked /> Enable bottom fade</label>
+        <div class="two-col">
+          <label>Fade starts <input id="fadeStart" type="range" min="35" max="80" step="0.5" value="57" /><output></output></label>
+          <label>Bottom darkness <input id="fadeStrength" type="range" min="0" max="100" step="1" value="88" /><output></output></label>
+          <label>Softness <input id="fadeCurve" type="range" min="0.35" max="2.2" step="0.05" value="0.88" /><output></output></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>6. Fonts / text style</h2>
+        <div class="section-actions">
+          <button id="resetFonts" type="button" class="secondary">Reset Fonts / Text Style</button>
+          <label class="check inline-check"><input id="linkOutlines" type="checkbox" /> Link outline sliders</label>
+        </div>
+        <div class="two-col">
+          <label>Name font <select id="nameFont">
+            <option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option>
+            <option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino</option>
+            <option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet</option>
+          </select></label>
+          <label>Type font <select id="typeFont">
+            <option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option>
+            <option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino</option>
+            <option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet</option>
+          </select></label>
+          <label>Rules font <select id="rulesFont">
+            <option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option>
+            <option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino</option>
+            <option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet</option>
+          </select></label>
+          <label>Footer font <select id="footerFont">
+            <option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option>
+            <option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino</option>
+            <option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet</option>
+          </select></label>
+          <label>P/T font <select id="ptFont">
+            <option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option>
+            <option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino</option>
+            <option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet</option>
+          </select></label>
+          <label class="wide">Custom font (.ttf/.otf) <input id="customFont" type="file" accept=".ttf,.otf,font/ttf,font/otf" /></label>
+          <label>Name text color <input id="nameColor" type="color" value="#f8f8f4" /></label>
+          <label>Type text color <input id="typeColor" type="color" value="#f8f8f4" /></label>
+          <label>Rules text color <input id="rulesColor" type="color" value="#f8f8f4" /></label>
+          <label>Footer text color <input id="footerColor" type="color" value="#f8f8f4" /></label>
+          <label>P/T text color <input id="ptColor" type="color" value="#f8f8f4" /></label>
+          <label>Proxy text color <input id="proxyColor" type="color" value="#f8f8f4" /></label>
+          <label class="check wide"><input id="linkTextColors" type="checkbox" /> Link all text colors</label>
+          <label>Name outline <input id="nameStroke" type="range" min="0" max="1.5" step="0.02" value="0.46" /><output></output></label>
+          <label>Type outline <input id="typeStroke" type="range" min="0" max="1.5" step="0.02" value="0.46" /><output></output></label>
+          <label>Rules outline <input id="rulesStroke" type="range" min="0" max="1.5" step="0.02" value="0.46" /><output></output></label>
+          <label>Footer / P-T outline <input id="footerStroke" type="range" min="0" max="1.5" step="0.02" value="0.46" /><output></output></label>
+          <label>Artist <input id="artist" value="MINEMETH" /></label>
+          <label>Proxy line <input id="proxyLine" value="For Proxy Play" /></label>
+        </div>
+      </section>
+
+            <section id="genericPTBoxSection">
+        <h2>7. P/T box</h2>
+        <button id="resetPTBox" type="button" class="secondary section-reset">Reset P/T Box</button>
+        <label class="check"><input id="ptBoxEnabled" type="checkbox" /> Enable box around Power / Toughness</label>
+        <div class="two-col">
+          <label>Box color <input id="ptBoxColor" type="color" value="#08080a" /></label>
+          <label>Box opacity <input id="ptBoxOpacity" type="range" min="0" max="100" step="1" value="82" /><output></output></label>
+          <label>Border color <input id="ptBoxBorderColor" type="color" value="#ffffff" /></label>
+          <label>Border thickness <input id="ptBoxBorderWidth" type="range" min="0" max="1.5" step="0.05" value="0.18" /><output></output></label>
+          <label>Horizontal padding <input id="ptBoxPadX" type="range" min="0" max="5" step="0.1" value="1.2" /><output></output></label>
+          <label>Vertical padding <input id="ptBoxPadY" type="range" min="0" max="5" step="0.1" value="0.6" /><output></output></label>
+          <label>Box X <input id="ptBoxX" type="range" min="-12" max="12" step="0.25" value="0" /><output></output></label>
+          <label>Box Y <input id="ptBoxY" type="range" min="-12" max="12" step="0.25" value="0" /><output></output></label>
+          <label>Corner radius <input id="ptBoxRadius" type="range" min="0" max="4" step="0.1" value="0.8" /><output></output></label>
+        </div>
+        <p class="hint">The box follows the P/T position and works in all three card styles.</p>
+      </section>
+
+      <section>
+        <h2>8. Export</h2>
+        <div class="export-grid">
+          <button id="exportV1">Export Version 1 PNG</button>
+          <button id="exportV2">Export Version 2 PNG</button>
+          <button id="exportBoth" class="wide-export">Export Both PNGs</button>
+        </div>
+        <p class="hint">Exports at 3000 × 4200 px. The project baseline uses proportional typography, a lower text block, fixed footer/P-T, and a darker lower fade.</p>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="version-tabs">
+        <button class="tab active" data-version="1">Version 1 — Original</button>
+        <button class="tab" data-version="2">Version 2 — Tweaked</button>
+      </div>
+      
+<div class="canvas-stage" id="canvasStage">
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="cardCanvas" width="1500" height="2100"></canvas>
+    <div id="selectionOverlay" class="selection-overlay" aria-hidden="true"></div>
+  </div>
+</div>
+
+      <div class="qc-panel">
+        <div><strong>QC</strong><span id="qcState" class="pill">Waiting for card</span></div>
+        <div id="qcDetails">Fetch a card and upload artwork.</div>
+      </div>
+    </section>
+
+    
+<aside id="layersPanel" class="layers-panel ui-inspector-panel">
+  <div class="inspector-tabs">
+    <button id="propertiesTabBtn" class="inspector-tab active" type="button">Properties</button>
+    <button id="layersTabBtn" class="inspector-tab" type="button">Layers</button>
+  </div>
+
+  <div id="propertiesPane" class="inspector-pane active">
+    <div class="properties-header">
+      <div>
+        <strong id="selectedObjectTitle">Card</strong>
+        <span id="selectedObjectHint">Click an element on the card to edit it here.</span>
+      </div>
+    </div>
+    <div id="contextProperties" class="context-properties"></div>
+  </div>
+
+  <div id="layersPane" class="inspector-pane">
+
+      <div class="layers-header">
+        <div>
+          <strong>Layers</strong>
+          <span>Top layers render above lower layers</span>
+        </div>
+        <button id="resetFreeform" type="button" class="secondary">Reset</button>
+      </div>
+      <div id="layersList" class="layers-list"></div>
+      <div class="grid-controls">
+        <div class="grid-controls-title">Grid</div>
+        <label class="check"><input id="ffShowGrid" type="checkbox" /> Show grid</label>
+        <label class="check"><input id="ffSnapGrid" type="checkbox" /> Snap to grid</label>
+        <label>Grid spacing
+          <input id="ffGridSize" type="range" min="1" max="10" step="0.25" value="2.5" />
+          <output></output>
+        </label>
+      </div>
+      <div class="layers-help">Drag rows to reorder. 👁 toggles visibility. 🔒 locks movement. Grid and selection outlines are preview-only.</div>
+  </div>
+</aside>
+  </main>
+
+
+<div id="advancedBackdrop" class="drawer-backdrop"></div>
+
+<div id="newCardWizard" class="wizard-backdrop" role="dialog" aria-modal="true">
+  <div class="wizard-card">
+    <div class="wizard-kicker">NEW CARD</div>
+    <h2>What are you making?</h2>
+    <p class="wizard-subtitle">Choose a starting setup. Nothing is locked—you can change any of this later.</p>
+
+    <div class="wizard-step">
+      <div class="wizard-step-title"><span>1</span> Card style</div>
+      <div class="choice-grid style-choice-grid">
+        <label class="choice-card"><input type="radio" name="wizardStyle" value="standard" checked /><strong>Standard</strong><small>Traditional framed MTG layout</small></label>
+        <label class="choice-card"><input type="radio" name="wizardStyle" value="borderless" /><strong>Borderless</strong><small>Artwork fills the card</small></label>
+        <label class="choice-card"><input type="radio" name="wizardStyle" value="fullart" /><strong>Full Art</strong><small>Full art with information panels</small></label>
+        <label class="choice-card"><input type="radio" name="wizardStyle" value="freeform" /><strong>Freeform</strong><small>Move, lock and layer everything</small></label>
+      </div>
+    </div>
+
+    <div class="wizard-step">
+      <div class="wizard-step-title"><span>2</span> Card type</div>
+      <div class="choice-grid type-choice-grid">
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="legendary-creature" checked /><strong>Legendary Creature</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="creature" /><strong>Creature</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="enchantment" /><strong>Enchantment</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="artifact" /><strong>Artifact</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="instant" /><strong>Instant</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="sorcery" /><strong>Sorcery</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="planeswalker" /><strong>Planeswalker</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="land" /><strong>Land</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="battle" /><strong>Battle</strong></label>
+        <label class="choice-card compact"><input type="radio" name="wizardType" value="other" /><strong>Other</strong></label>
+      </div>
+    </div>
+
+    <div class="wizard-step">
+      <div class="wizard-step-title"><span>3</span> Starting frame color <em>optional</em></div>
+      <select id="wizardFramePreset">
+        <option value="custom">Leave as custom / neutral</option>
+        <option value="white">White</option>
+        <option value="blue">Blue</option>
+        <option value="black">Black</option>
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="gold">Multicolor / Gold</option>
+        <option value="artifact">Artifact</option>
+        <option value="land">Land</option>
+        <option value="colorless">Colorless / Neutral</option>
+      </select>
+    </div>
+
+    <div class="wizard-actions">
+      <button id="wizardCreate" type="button" onclick="applyWizardSetup()">Create Card</button>
+    </div>
+  </div>
+</div>
+
+  <script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const canvas = $('#cardCanvas'), ctx = canvas.getContext('2d');
+const PREVIEW_W=1500, PREVIEW_H=2100, EXPORT_W=3000, EXPORT_H=4200;
+canvas.width=PREVIEW_W; canvas.height=PREVIEW_H;
+
+const state={version:1,card:null,setInfo:null,art1:null,art2:null,symbols:new Map(),renderTimer:null,uiSelected:'card',uiCardType:'legendary-creature',frameGraphics:{whole:null,title:null,art:null,type:null,rules:null,pt:null},
+  freeform:{selected:'name',drag:null,bounds:new Map(),layers:[],showGrid:false,snapGrid:false,gridSize:2.5}
+};
+
+
+const FREEFORM_LAYER_DEFS=[
+  {id:'artwork',name:'Artwork',x:0,y:0,visible:true,locked:true,section:2},
+  {id:'fade',name:'Black Fade',x:0,y:0,visible:true,locked:true,section:5},
+  {id:'frameWhole',name:'Frame — Whole Card',x:0,y:0,visible:true,locked:true,section:3},
+  {id:'frameArt',name:'Frame — Artwork',x:0,y:0,visible:true,locked:false,section:3},
+  {id:'frameTitle',name:'Frame — Title',x:5.25,y:3.5,visible:true,locked:false,section:3},
+  {id:'frameType',name:'Frame — Type',x:5.25,y:66.0,visible:true,locked:false,section:3},
+  {id:'frameRules',name:'Frame — Rules',x:5.25,y:70.0,visible:true,locked:false,section:3},
+  {id:'framePT',name:'Frame — P/T',x:82.0,y:84.5,visible:true,locked:false,section:3},
+  {id:'mana',name:'Mana Cost',x:5.25,y:58.0,fontSize:3.2,visible:true,locked:false,section:6},
+  {id:'name',name:'Card Name',x:5.25,y:62.0,fontSize:3.75,visible:true,locked:false,section:6},
+  {id:'type',name:'Type Line',x:5.25,y:67.0,fontSize:2.5,visible:true,locked:false,section:6},
+  {id:'rules',name:'Rules Text',x:5.25,y:71.0,w:89.5,h:22.0,fontSize:2.35,visible:true,locked:false,section:6},
+  {id:'collector',name:'Collector / Set',x:5.25,y:92.0,fontSize:1.35,visible:true,locked:false,section:6},
+  {id:'artist',name:'Artist Credit',x:5.25,y:95.0,fontSize:1.35,visible:true,locked:false,section:6},
+  {id:'proxy',name:'Proxy Line',x:95.0,y:96.75,fontSize:1.2825,visible:true,locked:false,section:6},
+  {id:'ptBox',name:'P/T Box',x:0,y:0,visible:true,locked:false,section:7},
+  {id:'pt',name:'Power / Toughness',x:95.0,y:88.0,fontSize:3.85,visible:true,locked:false,section:6}
+];
+function freshFreeformLayers(){
+  return FREEFORM_LAYER_DEFS.map(x=>({...x}));
+}
+state.freeform.layers=freshFreeformLayers();
+
+function ffLayer(id){
+  return state.freeform.layers.find(x=>x.id===id);
+}
+function ffVisible(id){
+  const l=ffLayer(id);return !!l&&l.visible;
+}
+
+// Project baseline derived from the layouts approved during the card-building workflow.
+// All typography/layout values are percentages or ratios so they scale consistently.
+const defaults={
+  blockBottom:87, blockNudge:-2.5,
+  leftMargin:5.25, rightMargin:5.25,
+  nameSize:3.75, typeSize:2.5, rulesSize:2.35,
+  lineHeight:1.22, paraGap:0.95,
+  manaSize:3.2, manaGap:0.45,
+  footerSize:1.35, ptSize:3.85,
+  ptY:88, footerY:92, proxyY:96.75,
+  fadeStart:48, fadeStrength:88, fadeCurve:.72,
+  nameStroke:.46, typeStroke:.46, rulesStroke:.46, footerStroke:.46,
+  nameFont:'Georgia', typeFont:'Georgia', rulesFont:'Georgia', footerFont:'Georgia', ptFont:'Georgia',
+  nameColor:'#f8f8f4', typeColor:'#f8f8f4', rulesColor:'#f8f8f4', footerColor:'#f8f8f4', ptColor:'#f8f8f4', proxyColor:'#f8f8f4',
+  artZoom:1, artX:0, artY:0,
+  v2Contrast:104, v2Saturation:97, v2Brightness:100,
+  cardStyle:'borderless', panelOpacity:78, frameOpacity:94, stylePanelY:0, typeRulesGap:1.2, panelColor:'#08080a', panelBorderColor:'#000000', panelBorderWidth:0,
+  ptBoxEnabled:false, ptBoxColor:'#08080a', ptBoxOpacity:82, ptBoxBorderColor:'#ffffff', ptBoxBorderWidth:.18, ptBoxPadX:1.2, ptBoxPadY:.6, ptBoxX:0, ptBoxY:0, ptBoxRadius:.8,
+  minRulesSize:2.0, topLimit:36,
+  frameGraphicOpacity:100,
+  stdOuterColor:'#1c1b19',stdTitleBorderColor:'#08080a',stdArtBorderColor:'#08080a',
+  stdTypeBorderColor:'#08080a',stdRulesBorderColor:'#08080a',stdPTBorderColor:'#08080a',stdBorderWidth:.35,
+  stdPTBoxEnabled:true,stdPTFillColor:'#c9c0a8',stdPTFillOpacity:100,
+  stdNameX:0,stdNameY:0,stdManaX:0,stdManaY:0,stdTypeX:0,stdTypeY:0,stdRulesX:0,stdRulesY:0,
+  stdFooterX:0,stdFooterYOffset:0,stdPTX:0,stdPTYOffset:0
+};
+
+
+const STANDARD_FRAME_PRESETS={
+  white:{
+    label:'White',
+    stdOuterColor:'#b9b19b',
+    stdTitleBorderColor:'#d8d0ba',
+    stdArtBorderColor:'#9f9682',
+    stdTypeBorderColor:'#cfc5ac',
+    stdRulesBorderColor:'#e4dcc8',
+    stdPTBorderColor:'#c9c0a8'
+  },
+  blue:{
+    label:'Blue',
+    stdOuterColor:'#31586b',
+    stdTitleBorderColor:'#3f7187',
+    stdArtBorderColor:'#294b5e',
+    stdTypeBorderColor:'#356579',
+    stdRulesBorderColor:'#7f9aa3',
+    stdPTBorderColor:'#416d80'
+  },
+  black:{
+    label:'Black',
+    stdOuterColor:'#282625',
+    stdTitleBorderColor:'#383431',
+    stdArtBorderColor:'#1f1d1d',
+    stdTypeBorderColor:'#312d2b',
+    stdRulesBorderColor:'#49433d',
+    stdPTBorderColor:'#302c29'
+  },
+  red:{
+    label:'Red',
+    stdOuterColor:'#743a2c',
+    stdTitleBorderColor:'#9a4b35',
+    stdArtBorderColor:'#683126',
+    stdTypeBorderColor:'#87412f',
+    stdRulesBorderColor:'#a66a55',
+    stdPTBorderColor:'#884230'
+  },
+  green:{
+    label:'Green',
+    stdOuterColor:'#3f5a45',
+    stdTitleBorderColor:'#54785a',
+    stdArtBorderColor:'#334b39',
+    stdTypeBorderColor:'#48694e',
+    stdRulesBorderColor:'#76907a',
+    stdPTBorderColor:'#48674d'
+  },
+  gold:{
+    label:'Multicolor / Gold',
+    stdOuterColor:'#725b2e',
+    stdTitleBorderColor:'#9a7b38',
+    stdArtBorderColor:'#5f4b27',
+    stdTypeBorderColor:'#876a30',
+    stdRulesBorderColor:'#b89d61',
+    stdPTBorderColor:'#8c7034'
+  },
+  artifact:{
+    label:'Artifact',
+    stdOuterColor:'#696d70',
+    stdTitleBorderColor:'#8a8f92',
+    stdArtBorderColor:'#565b5e',
+    stdTypeBorderColor:'#747a7d',
+    stdRulesBorderColor:'#a7abad',
+    stdPTBorderColor:'#74797c'
+  },
+  land:{
+    label:'Land',
+    stdOuterColor:'#675c4e',
+    stdTitleBorderColor:'#897763',
+    stdArtBorderColor:'#574d42',
+    stdTypeBorderColor:'#786957',
+    stdRulesBorderColor:'#a4947d',
+    stdPTBorderColor:'#776958'
+  },
+  colorless:{
+    label:'Colorless / Neutral',
+    stdOuterColor:'#55595c',
+    stdTitleBorderColor:'#74797d',
+    stdArtBorderColor:'#45494c',
+    stdTypeBorderColor:'#656a6d',
+    stdRulesBorderColor:'#92979a',
+    stdPTBorderColor:'#686d70'
+  }
+};
+
+function renderStandardPresetSwatches(key){
+  const wrap=$('#stdPresetSwatches');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  const p=STANDARD_FRAME_PRESETS[key];
+  if(!p)return;
+  ['stdOuterColor','stdTitleBorderColor','stdArtBorderColor','stdTypeBorderColor','stdRulesBorderColor','stdPTBorderColor']
+    .forEach(id=>{
+      const sw=document.createElement('div');
+      sw.className='preset-swatch';
+      sw.style.background=p[id];
+      sw.title=`${id}: ${p[id]}`;
+      wrap.appendChild(sw);
+    });
+}
+
+function applyStandardFramePreset(key){
+  const p=STANDARD_FRAME_PRESETS[key];
+  if(!p)return;
+  ['stdOuterColor','stdTitleBorderColor','stdArtBorderColor','stdTypeBorderColor','stdRulesBorderColor','stdPTBorderColor']
+    .forEach(id=>{
+      const el=$('#'+id);
+      if(el)el.value=p[id];
+    });
+  if($('#stdPTFillColor')) $('#stdPTFillColor').value=p.stdPTBorderColor;
+  if($('#stdPTFillOpacity')) $('#stdPTFillOpacity').value=100;
+  renderStandardPresetSwatches(key);
+  scheduleRender();
+}
+
+function markStandardPresetCustom(){
+  const sel=$('#stdFramePreset');
+  if(sel && sel.value!=='custom')sel.value='custom';
+  const wrap=$('#stdPresetSwatches');
+  if(wrap){
+    wrap.innerHTML='';
+    ['stdOuterColor','stdTitleBorderColor','stdArtBorderColor','stdTypeBorderColor','stdRulesBorderColor','stdPTBorderColor']
+      .forEach(id=>{
+        const el=$('#'+id);if(!el)return;
+        const sw=document.createElement('div');
+        sw.className='preset-swatch';
+        sw.style.background=el.value;
+        sw.title=`${id}: ${el.value}`;
+        wrap.appendChild(sw);
+      });
+  }
+}
+
+
+const UI_OBJECT_LABELS={
+  card:'Card',artwork:'Artwork',name:'Card Name',mana:'Mana Cost',type:'Type Line',
+  rules:'Rules Text',pt:'Power / Toughness',footer:'Footer',frame:'Frame'
+};
+
+const UI_PROPERTY_CONFIG={
+  card:{
+    groups:[
+      {title:'Card setup',controls:[
+        {kind:'selectProxy',label:'Style',id:'cardStyle'},
+        {kind:'action',label:'Open setup wizard',action:'wizard'}
+      ]},
+      {title:'Guides',controls:[
+        {kind:'mirror',label:'Show layout guides',id:'showGuides'},
+        {kind:'mirror',label:'Show 0.65 mm edge guide',id:'showBleedGuide'}
+      ]}
+    ]
+  },
+  artwork:{
+    groups:[
+      {title:'Artwork',controls:[
+        {kind:'action',label:'Upload Version 1 art',action:'art1'},
+        {kind:'action',label:'Upload Version 2 art',action:'art2'},
+        {kind:'mirror',label:'Art zoom',id:'artZoom'},
+        {kind:'mirror',label:'Art X',id:'artX'},
+        {kind:'mirror',label:'Art Y',id:'artY'}
+      ]},
+      {title:'Version 2 adjustments',controls:[
+        {kind:'mirror',label:'Contrast',id:'v2Contrast'},
+        {kind:'mirror',label:'Saturation',id:'v2Saturation'},
+        {kind:'mirror',label:'Brightness',id:'v2Brightness'}
+      ]}
+    ]
+  },
+  name:{
+    groups:[{title:'Name',controls:[
+      {kind:'mirror',label:'Text',id:'cardName'},
+      {kind:'mirror',label:'Font',id:'nameFont'},
+      {kind:'mirror',label:'Font size',id:'nameSize'},
+      {kind:'mirror',label:'Color',id:'nameColor'},
+      {kind:'mirror',label:'Outline',id:'nameStroke'},
+      {kind:'styleNudge',label:'X fine tune',standard:'stdNameX'},
+      {kind:'styleNudge',label:'Y fine tune',standard:'stdNameY'}
+    ]}]
+  },
+  mana:{
+    groups:[{title:'Mana',controls:[
+      {kind:'mirror',label:'Mana cost',id:'manaCost'},
+      {kind:'mirror',label:'Symbol size',id:'manaSize'},
+      {kind:'mirror',label:'Symbol gap',id:'manaGap'},
+      {kind:'styleNudge',label:'X fine tune',standard:'stdManaX'},
+      {kind:'styleNudge',label:'Y fine tune',standard:'stdManaY'}
+    ]}]
+  },
+  type:{
+    groups:[{title:'Type line',controls:[
+      {kind:'mirror',label:'Text',id:'typeLine'},
+      {kind:'mirror',label:'Font',id:'typeFont'},
+      {kind:'mirror',label:'Font size',id:'typeSize'},
+      {kind:'mirror',label:'Color',id:'typeColor'},
+      {kind:'mirror',label:'Outline',id:'typeStroke'},
+      {kind:'styleNudge',label:'X fine tune',standard:'stdTypeX'},
+      {kind:'styleNudge',label:'Y fine tune',standard:'stdTypeY'}
+    ]}]
+  },
+  rules:{
+    groups:[
+      {title:'Rules text',controls:[
+        {kind:'mirror',label:'Oracle / rules text',id:'oracleText'},
+        {kind:'mirror',label:'Font',id:'rulesFont'},
+        {kind:'mirror',label:'Font size',id:'rulesSize'},
+        {kind:'mirror',label:'Minimum size',id:'minRulesSize'},
+        {kind:'mirror',label:'Color',id:'rulesColor'},
+        {kind:'mirror',label:'Outline',id:'rulesStroke'}
+      ]},
+      {title:'Spacing',controls:[
+        {kind:'mirror',label:'Line height',id:'lineHeight'},
+        {kind:'mirror',label:'Paragraph gap',id:'paraGap'},
+        {kind:'styleNudge',label:'X fine tune',standard:'stdRulesX'},
+        {kind:'styleNudge',label:'Y fine tune',standard:'stdRulesY'}
+      ]}
+    ]
+  },
+  pt:{
+    groups:[
+      {title:'Power / Toughness',controls:[
+        {kind:'mirror',label:'P/T',id:'pt'},
+        {kind:'mirror',label:'Font',id:'ptFont'},
+        {kind:'mirror',label:'Font size',id:'ptSize'},
+        {kind:'mirror',label:'Color',id:'ptColor'},
+        {kind:'styleNudge',label:'X fine tune',standard:'stdPTX'},
+        {kind:'styleNudge',label:'Y fine tune',standard:'stdPTYOffset'}
+      ]},
+      {title:'Standard P/T box',controls:[
+        {kind:'standardOnly',label:'Show P/T box',id:'stdPTBoxEnabled'},
+        {kind:'standardOnly',label:'Fill color',id:'stdPTFillColor'},
+        {kind:'standardOnly',label:'Fill opacity',id:'stdPTFillOpacity'},
+        {kind:'standardOnly',label:'Border color',id:'stdPTBorderColor'}
+      ]}
+    ]
+  },
+  footer:{
+    groups:[
+      {title:'Footer',controls:[
+        {kind:'mirror',label:'Collector',id:'collector'},
+        {kind:'mirror',label:'Set / language / rarity',id:'setLine'},
+        {kind:'mirror',label:'Artist',id:'artist'},
+        {kind:'mirror',label:'Proxy line',id:'proxyLine'},
+        {kind:'mirror',label:'Font',id:'footerFont'},
+        {kind:'mirror',label:'Font size',id:'footerSize'},
+        {kind:'mirror',label:'Footer color',id:'footerColor'},
+        {kind:'mirror',label:'Proxy color',id:'proxyColor'},
+        {kind:'styleNudge',label:'X fine tune',standard:'stdFooterX'},
+        {kind:'styleNudge',label:'Y fine tune',standard:'stdFooterYOffset'}
+      ]}
+    ]
+  },
+  frame:{
+    groups:[
+      {title:'Frame / panels',controls:[
+        {kind:'mirror',label:'Panel opacity',id:'panelOpacity'},
+        {kind:'mirror',label:'Frame opacity',id:'frameOpacity'},
+        {kind:'mirror',label:'Panel color',id:'panelColor'},
+        {kind:'mirror',label:'Panel border color',id:'panelBorderColor'},
+        {kind:'mirror',label:'Panel border thickness',id:'panelBorderWidth'}
+      ]},
+      {title:'Standard colors',controls:[
+        {kind:'standardOnly',label:'Frame preset',id:'stdFramePreset'},
+        {kind:'standardOnly',label:'Outer frame',id:'stdOuterColor'},
+        {kind:'standardOnly',label:'Title border',id:'stdTitleBorderColor'},
+        {kind:'standardOnly',label:'Artwork border',id:'stdArtBorderColor'},
+        {kind:'standardOnly',label:'Type border',id:'stdTypeBorderColor'},
+        {kind:'standardOnly',label:'Rules border',id:'stdRulesBorderColor'}
+      ]},
+      {title:'Frame graphics',controls:[
+        {kind:'action',label:'Open full Frame Graphics controls',action:'advanced'}
+      ]}
+    ]
+  }
+};
+
+function sourceControl(id){return $('#'+id)}
+function copyInputState(src,dst){
+  if(!src||!dst)return;
+  if(src.type==='checkbox')dst.checked=src.checked;
+  else dst.value=src.value;
+  dst.disabled=src.disabled;
+  if(src.readOnly)dst.readOnly=true;
+}
+function makeMirroredControl(spec){
+  const src=sourceControl(spec.id);
+  if(!src)return null;
+  const label=document.createElement('label');
+  label.textContent=spec.label||spec.id;
+
+  let el;
+  if(src.tagName==='TEXTAREA'){
+    el=document.createElement('textarea');
+    el.rows=Math.max(5,src.rows||5);
+  }else if(src.tagName==='SELECT'){
+    el=document.createElement('select');
+    [...src.options].forEach(o=>{
+      const opt=document.createElement('option');opt.value=o.value;opt.textContent=o.textContent;el.appendChild(opt);
+    });
+  }else{
+    el=document.createElement('input');
+    el.type=src.type||'text';
+    if(src.min!=='')el.min=src.min;
+    if(src.max!=='')el.max=src.max;
+    if(src.step!=='')el.step=src.step;
+  }
+
+  copyInputState(src,el);
+  if(src.type==='checkbox'){
+    label.className='check';
+    label.textContent='';
+    label.appendChild(el);
+    label.appendChild(document.createTextNode(' '+(spec.label||spec.id)));
+  }else{
+    label.appendChild(el);
+  }
+
+  const syncToSource=()=>{
+    if(src.type==='checkbox')src.checked=el.checked;
+    else src.value=el.value;
+    src.dispatchEvent(new Event(src.type==='checkbox'?'change':'input',{bubbles:true}));
+    if(src.tagName==='SELECT')src.dispatchEvent(new Event('change',{bubbles:true}));
+    scheduleRender();
+    updateQuickUI();
+  };
+  el.addEventListener(src.type==='checkbox'?'change':'input',syncToSource);
+  if(src.tagName==='SELECT')el.addEventListener('change',syncToSource);
+
+  const syncFromSource=()=>copyInputState(src,el);
+  src.addEventListener('input',syncFromSource);
+  src.addEventListener('change',syncFromSource);
+
+  return label;
+}
+function makeActionControl(spec){
+  const b=document.createElement('button');b.type='button';b.className='secondary property-button';b.textContent=spec.label;
+  b.addEventListener('click',()=>{
+    if(spec.action==='art1')$('#art1')?.click();
+    else if(spec.action==='art2')$('#art2')?.click();
+    else if(spec.action==='wizard')openNewCardWizard(false);
+    else if(spec.action==='advanced')openAdvancedDrawer();
+  });
+  return b;
+}
+function renderContextProperties(){
+  const host=$('#contextProperties');if(!host)return;
+  host.innerHTML='';
+  const id=state.uiSelected||'card';
+  const title=UI_OBJECT_LABELS[id]||id;
+  $('#selectedObjectTitle').textContent=title;
+  $('#selectedObjectHint').textContent=(id==='card')
+    ?'Choose a card setup or click an element on the preview.'
+    :'Editing '+title+'. Changes update the card immediately.';
+
+  const config=UI_PROPERTY_CONFIG[id]||UI_PROPERTY_CONFIG.card;
+  const style=v('cardStyle');
+
+  for(const group of config.groups){
+    const box=document.createElement('div');box.className='property-group';
+    const h=document.createElement('div');h.className='property-group-title';h.textContent=group.title;box.appendChild(h);
+
+    let added=0;
+    for(const spec of group.controls){
+      if(spec.kind==='standardOnly' && style!=='standard')continue;
+      let node=null;
+      if(spec.kind==='mirror'||spec.kind==='selectProxy'||spec.kind==='standardOnly'){
+        node=makeMirroredControl(spec);
+      }else if(spec.kind==='styleNudge'){
+        if(style==='standard'&&spec.standard)node=makeMirroredControl({label:spec.label,id:spec.standard});
+      }else if(spec.kind==='action'){
+        node=makeActionControl(spec);
+      }
+      if(node){box.appendChild(node);added++}
+    }
+    if(added)host.appendChild(box);
+  }
+
+  if(style==='freeform' && id!=='card'){
+    const layerId=({artwork:'artwork',name:'name',mana:'mana',type:'type',rules:'rules',pt:'pt',footer:'collector',frame:'frameWhole'})[id];
+    const layer=layerId?ffLayer(layerId):null;
+    if(layer){
+      const box=document.createElement('div');box.className='property-group';
+      box.innerHTML='<div class="property-group-title">Freeform layer</div>';
+      const note=document.createElement('div');note.className='note';
+      note.textContent='Use the Layers tab for visibility, locking, z-order, grid and direct Freeform placement.';
+      box.appendChild(note);host.appendChild(box);
+    }
+  }
+}
+
+function setUISelection(id,showOverlay=true){
+  state.uiSelected=id||'card';
+  renderContextProperties();
+  if(showOverlay && v('cardStyle')!=='freeform')updateSelectionOverlay();
+  else hideSelectionOverlay();
+}
+
+function uiBoundsForObject(id){
+  const style=v('cardStyle');
+  const shift=v('stylePanelY')/100;
+  if(style==='standard'){
+    const typeY=Math.max(.20,Math.min(.70,.565+shift));
+    const rulesY=Math.max(typeY+.065,Math.min(.72,.64+shift));
+    const map={
+      artwork:{x:.065,y:.145,w:.87,h:.405},
+      name:{x:.075,y:.055,w:.62,h:.075},
+      mana:{x:.70,y:.055,w:.23,h:.075},
+      type:{x:.065,y:typeY,w:.87,h:.058},
+      rules:{x:.065,y:rulesY,w:.87,h:.265},
+      pt:{x:.77,y:.84,w:.16,h:.085},
+      footer:{x:.065,y:.90,w:.87,h:.085},
+      frame:{x:.035,y:.035,w:.93,h:.93},
+      card:{x:0,y:0,w:1,h:1}
+    }; return map[id];
+  }
+  if(style==='fullart'){
+    const map={
+      artwork:{x:0,y:0,w:1,h:1},
+      name:{x:.06,y:.035,w:.60,h:.095},
+      mana:{x:.66,y:.035,w:.28,h:.095},
+      type:{x:.06,y:.58+shift,w:.88,h:.07},
+      rules:{x:.06,y:.64+shift,w:.88,h:.265},
+      pt:{x:.77,y:.84,w:.17,h:.085},
+      footer:{x:.055,y:.90,w:.89,h:.09},
+      frame:{x:.03,y:.03,w:.94,h:.94},
+      card:{x:0,y:0,w:1,h:1}
+    }; return map[id];
+  }
+  if(style==='borderless'){
+    const map={
+      artwork:{x:0,y:0,w:1,h:.53},
+      mana:{x:.05,y:.52,w:.50,h:.05},
+      name:{x:.05,y:.57,w:.80,h:.055},
+      type:{x:.05,y:.625,w:.85,h:.05},
+      rules:{x:.05,y:.675,w:.90,h:.205},
+      pt:{x:.76,y:.84,w:.19,h:.08},
+      footer:{x:.05,y:.90,w:.90,h:.09},
+      frame:{x:0,y:0,w:1,h:1},
+      card:{x:0,y:0,w:1,h:1}
+    }; return map[id];
+  }
+  return null;
+}
+function hideSelectionOverlay(){const o=$('#selectionOverlay');if(o)o.style.display='none'}
+function updateSelectionOverlay(){
+  const o=$('#selectionOverlay'),wrap=$('#canvasWrap');if(!o||!wrap)return;
+  const b=uiBoundsForObject(state.uiSelected);if(!b){hideSelectionOverlay();return}
+  const cr=canvas.getBoundingClientRect(),wr=wrap.getBoundingClientRect();
+  if(!cr.width||!cr.height){hideSelectionOverlay();return}
+  o.style.display='block';
+  o.dataset.label=UI_OBJECT_LABELS[state.uiSelected]||state.uiSelected;
+  o.style.left=(cr.left-wr.left+b.x*cr.width)+'px';
+  o.style.top=(cr.top-wr.top+b.y*cr.height)+'px';
+  o.style.width=(b.w*cr.width)+'px';
+  o.style.height=(b.h*cr.height)+'px';
+}
+function nonFreeformObjectAtPoint(evt){
+  const r=canvas.getBoundingClientRect();
+  const nx=(evt.clientX-r.left)/r.width,ny=(evt.clientY-r.top)/r.height;
+  const style=v('cardStyle');
+  const order=['pt','footer','mana','name','type','rules','artwork'];
+  if(style==='standard'||style==='fullart'||style==='borderless'){
+    for(const id of order){
+      const b=uiBoundsForObject(id);if(!b)continue;
+      if(nx>=b.x&&nx<=b.x+b.w&&ny>=b.y&&ny<=b.y+b.h)return id;
+    }
+    return 'frame';
+  }
+  return 'card';
+}
+
+function updateQuickUI(){
+  if($('#quickCardStyle')&&$('#cardStyle'))$('#quickCardStyle').value=$('#cardStyle').value;
+  if($('#quickCardType'))$('#quickCardType').value=state.uiCardType||'legendary-creature';
+  if($('#quickFramePreset')&&$('#stdFramePreset'))$('#quickFramePreset').value=$('#stdFramePreset').value||'custom';
+  if($('#quickScryfallUrl')&&$('#scryfallUrl'))$('#quickScryfallUrl').value=$('#scryfallUrl').value||'';
+
+  const status=$('#quickFetchStatus');
+  if(status)status.textContent=state.card?`${state.card.name} · ${String(state.card.set||'').toUpperCase()} #${state.card.collector_number}`:'No card loaded.';
+  const art=$('#quickArtStatus');
+  if(art)art.textContent=state.art1?(state.art2?'Version 1 + Version 2 loaded':'Version 1 loaded'):'No artwork loaded.';
+  const top=$('#topbarCardStatus');
+  if(top){
+    const styleLabel=$('#cardStyle')?.selectedOptions?.[0]?.textContent||'';
+    const typeLabel=$('#quickCardType')?.selectedOptions?.[0]?.textContent||'';
+    top.textContent=state.card?`${state.card.name} · ${styleLabel}`:`${typeLabel} · ${styleLabel}`;
+  }
+}
+
+function setCardTypeDefaults(type){
+  state.uiCardType=type||'other';
+  const creature=type==='creature'||type==='legendary-creature';
+  if($('#stdPTBoxEnabled'))$('#stdPTBoxEnabled').checked=creature;
+  if(!creature && !state.card && $('#pt'))$('#pt').value='';
+  updateStandardPTControls?.();
+  scheduleRender();
+}
+
+function openNewCardWizard(reset=false){
+  if(reset)clearWorkspaceForNewCard();
+  $('#newCardWizard')?.classList.remove('hidden');
+}
+function closeNewCardWizard(){$('#newCardWizard')?.classList.add('hidden')}
+function clearWorkspaceForNewCard(){
+  state.card=null;state.setInfo=null;state.art1=null;state.art2=null;state.uiSelected='card';
+  state.frameGraphics={whole:null,title:null,art:null,type:null,rules:null,pt:null};
+  state.freeform.layers=freshFreeformLayers();
+  state.freeform.selected='name';state.freeform.drag=null;state.freeform.bounds.clear();
+  ['cardName','manaCost','typeLine','oracleText','pt','collector','setLine','scryfallUrl'].forEach(id=>{const el=$('#'+id);if(el)el.value=''});
+  ['art1','art2','frameWholeUpload','frameTitleUpload','frameArtUpload','frameTypeUpload','frameRulesUpload','framePTUpload'].forEach(id=>{const el=$('#'+id);if(el)el.value=''});
+  if($('#artist'))$('#artist').value='MINEMETH';
+  if($('#proxyLine'))$('#proxyLine').value='For Proxy Play';
+  if($('#dataLocked'))$('#dataLocked').checked=true;
+  applyProjectBaseline();
+  state.version=1;
+  $$('.tab').forEach(x=>x.classList.toggle('active',+x.dataset.version===1));
+  if($('#fetchStatus'))$('#fetchStatus').textContent='Paste an exact Scryfall printing URL.';
+  syncFieldLock();
+  renderLayersPanel();
+  hideSelectionOverlay();
+  updateQuickUI();
+  renderContextProperties();
+  scheduleRender();
+}
+function applyWizardSetup(){
+  const wizard=$('#newCardWizard');
+  const createBtn=$('#wizardCreate');
+  try{
+    if(createBtn){createBtn.disabled=true;createBtn.textContent='Creating…';}
+
+    const style=document.querySelector('input[name="wizardStyle"]:checked')?.value||'standard';
+    const type=document.querySelector('input[name="wizardType"]:checked')?.value||'legendary-creature';
+    const preset=$('#wizardFramePreset')?.value||'custom';
+
+    // Close immediately so the user gets direct feedback that the click worked.
+    wizard?.classList.add('hidden');
+
+    const styleEl=$('#cardStyle');
+    if(styleEl)styleEl.value=style;
+
+    state.uiCardType=type;
+    const creature=(type==='creature'||type==='legendary-creature');
+    const stdPT=$('#stdPTBoxEnabled');
+    if(stdPT)stdPT.checked=creature;
+    if(!creature && !state.card){
+      const pt=$('#pt');if(pt)pt.value='';
+    }
+
+    const presetEl=$('#stdFramePreset');
+    if(presetEl)presetEl.value=preset;
+    if(preset!=='custom' && typeof applyStandardFramePreset==='function'){
+      applyStandardFramePreset(preset);
+    }
+
+    updateModeSpecificControls();
+    updateStandardPTControls();
+    setFreeformMode();
+    setUISelection('card',false);
+    updateQuickUI();
+    renderContextProperties();
+    scheduleRender();
+  }catch(err){
+    console.error('Create Card failed:',err);
+    wizard?.classList.remove('hidden');
+    const subtitle=wizard?.querySelector('.wizard-subtitle');
+    if(subtitle){
+      subtitle.textContent='Could not create the card: '+(err?.message||err);
+      subtitle.style.color='#ff8a8a';
+    }
+  }finally{
+    if(createBtn){createBtn.disabled=false;createBtn.textContent='Create Card';}
+  }
+}
+
+function openAdvancedDrawer(){
+  $('#advancedDrawer')?.classList.add('open');
+  $('#advancedBackdrop')?.classList.add('open');
+}
+function closeAdvancedDrawer(){
+  $('#advancedDrawer')?.classList.remove('open');
+  $('#advancedBackdrop')?.classList.remove('open');
+}
+function showInspectorPane(which){
+  const prop=which==='properties';
+  $('#propertiesPane')?.classList.toggle('active',prop);
+  $('#layersPane')?.classList.toggle('active',!prop);
+  $('#propertiesTabBtn')?.classList.toggle('active',prop);
+  $('#layersTabBtn')?.classList.toggle('active',!prop);
+}
+
+
+function quickStyleDirect(value){
+  const el=$('#cardStyle');if(!el)return;
+  el.value=value;
+  updateModeSpecificControls();
+  setFreeformMode();
+  updateQuickUI();
+  renderContextProperties();
+  scheduleRender();
+}
+function quickTypeDirect(value){
+  setCardTypeDefaults(value);
+  updateQuickUI();
+  renderContextProperties();
+}
+function quickPresetDirect(value){
+  const el=$('#stdFramePreset');if(el)el.value=value;
+  if(value!=='custom'&&typeof applyStandardFramePreset==='function')applyStandardFramePreset(value);
+  updateQuickUI();
+  renderContextProperties();
+  scheduleRender();
+}
+function quickScryfallDirect(value){
+  const el=$('#scryfallUrl');if(el)el.value=value;
+}
+async function quickFetchCardDirect(){
+  const q=$('#quickScryfallUrl'),src=$('#scryfallUrl'),status=$('#quickFetchStatus');
+  if(src&&q)src.value=q.value;
+  if(status)status.textContent='Fetching exact printing…';
+  try{
+    await loadCard();
+    updateQuickUI();
+    if(status)status.textContent=state.card?`${state.card.name} · ${String(state.card.set||'').toUpperCase()} #${state.card.collector_number}`:'Card fetch finished.';
+  }catch(err){
+    console.error(err);
+    if(status)status.textContent='Fetch failed: '+(err?.message||err);
+  }
+}
+async function quickArtDirect(input,key){
+  const status=$('#quickArtStatus');
+  try{
+    if(status)status.textContent='Loading artwork…';
+    await loadArt(input,key);
+    updateQuickUI();
+    if(status)status.textContent=state.art1?(state.art2?'Version 1 + Version 2 loaded':'Version 1 loaded'):'No artwork loaded.';
+  }catch(err){
+    console.error(err);
+    if(status)status.textContent='Artwork load failed: '+(err?.message||err);
+  }
+}
+
+function hookV40UI(){
+  $('#startNewCard')?.addEventListener('click',()=>openNewCardWizard(true));
+  $('#reopenSetup')?.addEventListener('click',()=>openNewCardWizard(false));
+  $('#toggleAdvanced')?.addEventListener('click',openAdvancedDrawer);
+  $('#advancedBackdrop')?.addEventListener('click',closeAdvancedDrawer);
+  $('#propertiesTabBtn')?.addEventListener('click',()=>showInspectorPane('properties'));
+  $('#layersTabBtn')?.addEventListener('click',()=>showInspectorPane('layers'));
+
+  $('#quickExport')?.addEventListener('click',()=>$('#exportBoth')?.click());
+
+  canvas.addEventListener('click',e=>{
+    if(v('cardStyle')==='freeform')return;
+    setUISelection(nonFreeformObjectAtPoint(e),true);
+  });
+
+  window.addEventListener('resize',()=>{if(v('cardStyle')!=='freeform')updateSelectionOverlay()});
+
+  ['cardStyle','stdFramePreset','scryfallUrl','cardName','typeLine','pt'].forEach(id=>{
+    $('#'+id)?.addEventListener('change',()=>{updateQuickUI();renderContextProperties()});
+    $('#'+id)?.addEventListener('input',()=>updateQuickUI());
+  });
+
+  updateQuickUI();
+  renderContextProperties();
+  showInspectorPane('properties');
+}
+
+function v(id){const el=$('#'+id); return el.type==='checkbox'?el.checked:Number.isFinite(+el.value)?+el.value:el.value}
+function pct(n,h=PREVIEW_H){return n/100*h}
+
+function hexToRgb(hex){
+  const h=String(hex||'#000000').replace('#','').trim();
+  const v=h.length===3?h.split('').map(x=>x+x).join(''):h.padEnd(6,'0').slice(0,6);
+  return {
+    r:parseInt(v.slice(0,2),16)||0,
+    g:parseInt(v.slice(2,4),16)||0,
+    b:parseInt(v.slice(4,6),16)||0
+  };
+}
+function rgbaFromHex(hex,alpha=1){
+  const {r,g,b}=hexToRgb(hex);
+  return `rgba(${r},${g},${b},${Math.max(0,Math.min(1,alpha))})`;
+}
+
+function showOutputs(){
+  $$('input[type=range]').forEach(el=>{
+    const out=el.parentElement.querySelector('output');
+    if(!out)return;
+    const pctIds=new Set(['blockBottom','blockNudge','leftMargin','rightMargin','nameSize','typeSize','rulesSize','manaSize','manaGap','footerSize','ptSize','ptY','footerY','proxyY','fadeStart','fadeStrength','artX','artY','topLimit','minRulesSize','panelOpacity','frameOpacity','stylePanelY','typeRulesGap','panelBorderWidth','ptBoxOpacity','ptBoxBorderWidth','ptBoxPadX','ptBoxPadY','ptBoxX','ptBoxY','ptBoxRadius','ffSelectedX','ffSelectedY','ffSelectedW','ffSelectedH','ffSelectedFontSize','ffGridSize','frameGraphicOpacity','stdBorderWidth','stdPTFillOpacity','stdNameX','stdNameY','stdManaX','stdManaY','stdTypeX','stdTypeY','stdRulesX','stdRulesY','stdFooterX','stdFooterYOffset','stdPTX','stdPTYOffset']);
+    out.textContent=pctIds.has(el.id)?`${el.value}${el.id==='fadeStrength'?'%':'%'}`:el.value;
+  });
+}
+
+async function fetchJSON(url){
+  const r=await fetch(url,{headers:{Accept:'application/json'}});
+  if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+function parseScryfallUrl(url){
+  const m=url.match(/scryfall\.com\/card\/([^/]+)\/([^/?#]+)/i);
+  return m?{set:m[1],collector:m[2]}:null;
+}
+
+async function loadCard(){
+  const status=$('#fetchStatus');
+  try{
+    const p=parseScryfallUrl($('#scryfallUrl').value.trim());
+    if(!p) throw new Error('That does not look like an exact Scryfall card URL.');
+    status.textContent='Fetching exact printing…';
+    const [card,setInfo]=await Promise.all([
+      fetchJSON(`https://api.scryfall.com/cards/${encodeURIComponent(p.set)}/${encodeURIComponent(p.collector)}`),
+      fetchJSON(`https://api.scryfall.com/sets/${encodeURIComponent(p.set)}`).catch(()=>null)
+    ]);
+    state.card=card; state.setInfo=setInfo;
+    fillFields(card,setInfo);
+    await preloadSymbols(card);
+    status.textContent=`Locked: ${card.name} — ${card.set.toUpperCase()} #${card.collector_number}`;
+    if(typeof updateQuickUI==='function')updateQuickUI();
+    $('#dataLocked').checked=true;
+    syncFieldLock();
+    scheduleRender();
+  }catch(e){status.textContent='Fetch failed: '+e.message;}
+}
+
+function rarityLetter(r){return ({common:'C',uncommon:'U',rare:'R',mythic:'M',special:'S',bonus:'B'})[r]||String(r||'').slice(0,1).toUpperCase()}
+function face(card){return card.card_faces?.[0]||card}
+function fillFields(card,setInfo){
+  const f=face(card);
+  $('#cardName').value=f.name||card.name||'';
+  $('#manaCost').value=f.mana_cost||card.mana_cost||'';
+  $('#typeLine').value=f.type_line||'';
+  $('#oracleText').value=f.oracle_text||'';
+  $('#pt').value=(f.power!=null&&f.toughness!=null)?`${f.power}/${f.toughness}`:'';
+  const total=setInfo?.card_count;
+  $('#collector').value=`${card.collector_number}${total?`/${total}`:''}  ${rarityLetter(card.rarity)}`;
+  $('#setLine').value=`${card.set.toUpperCase()} • ${String(card.lang||'en').toUpperCase()} • ${rarityLetter(card.rarity)}`;
+}
+function syncFieldLock(){
+  const locked=$('#dataLocked').checked;
+  ['cardName','manaCost','typeLine','oracleText','pt','collector','setLine'].forEach(id=>$('#'+id).readOnly=locked);
+}
+
+function tokenizeSymbols(text){return [...String(text||'').matchAll(/\{[^}]+\}|[^{}]+/g)].map(m=>m[0])}
+function allSymbolsFromCard(card){const f=face(card);const text=[f.mana_cost,f.oracle_text].join(' ');return [...new Set((text.match(/\{[^}]+\}/g)||[]))]}
+async function preloadSymbols(card){
+  const syms=allSymbolsFromCard(card); if(!syms.length)return;
+  let catalog;
+  try{catalog=await fetchJSON('https://api.scryfall.com/symbology')}catch{return}
+  const map=new Map(catalog.data.map(x=>[x.symbol,x.svg_uri]));
+  await Promise.all(syms.map(async sym=>{
+    if(state.symbols.has(sym))return;
+    const uri=map.get(sym); if(!uri)return;
+    try{
+      // Fetch as a blob first. This is more reliable for export than drawing a remote image directly.
+      const r=await fetch(uri,{mode:'cors'}); if(!r.ok)return;
+      const blob=await r.blob(); const url=URL.createObjectURL(blob);
+      const img=new Image(); img.src=url; await img.decode();
+      state.symbols.set(sym,img);
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+    }catch{}
+  }));
+}
+
+function loadArt(input,key){
+  const file=input.files?.[0];if(!file)return;
+  const url=URL.createObjectURL(file);const img=new Image();
+  img.onload=()=>{state[key]=img;URL.revokeObjectURL(url);scheduleRender()};img.src=url;
+}
+
+function drawCover(c,img,W,H,filter='none'){
+  if(!img){c.fillStyle='#10151d';c.fillRect(0,0,W,H);return}
+  const zoom=v('artZoom'), ox=v('artX')/100, oy=v('artY')/100;
+  const s=Math.max(W/img.width,H/img.height)*zoom; const dw=img.width*s,dh=img.height*s;
+  const x=(W-dw)/2+ox*W, y=(H-dh)/2+oy*H;
+  c.save();c.filter=filter;c.drawImage(img,x,y,dw,dh);c.restore();
+}
+function drawFade(c,W,H){
+  if(!v('fadeEnabled'))return;
+  const y0=pct(v('fadeStart'),H), strength=v('fadeStrength')/100, curve=v('fadeCurve');
+  const g=c.createLinearGradient(0,y0,0,H);
+  for(let i=0;i<=16;i++){const t=i/16,a=strength*Math.pow(t,curve);g.addColorStop(t,`rgba(0,0,0,${a})`)}
+  c.fillStyle=g;c.fillRect(0,y0,W,H-y0);
+}
+function font(px,bold=true,italic=false,family='Georgia'){const style=italic?'italic ':'';const weight=bold?'700':'400';return `${style}${weight} ${Math.round(px)}px "${family}", Georgia, 'Times New Roman', serif`}
+function outlinedText(c,text,x,y,size,align='left',italic=false,family='Georgia',strokeId='rulesStroke',color='#f8f8f4'){
+  c.font=font(size,true,italic,family);c.textAlign=align;c.textBaseline='top';c.lineJoin='round';
+  const strokeVal=Number(v(strokeId))||0;
+  const sw=size*strokeVal/10;
+  if(sw>0){c.strokeStyle='rgba(0,0,0,.98)';c.lineWidth=sw*2;c.strokeText(text,x,y);}
+  c.fillStyle=color||'#f8f8f4';c.fillText(text,x,y);
+}
+
+
+function drawPTBox(c,text,rightX,y,size,W,H){
+  if(!v('ptBoxEnabled')) return;
+
+  const family=v('ptFont')||'Georgia';
+  c.save();
+  c.font=font(size,true,false,family);
+  c.textBaseline='top';
+  c.textAlign='left';
+
+  const raw=String(text||'');
+  const width=c.measureText(raw).width;
+  const metrics=c.measureText(raw);
+  const textH=Math.max(
+    size,
+    (metrics.actualBoundingBoxAscent||size*.8)+(metrics.actualBoundingBoxDescent||size*.2)
+  );
+
+  const padX=H*(Number(v('ptBoxPadX'))||0)/100;
+  const padY=H*(Number(v('ptBoxPadY'))||0)/100;
+  const radius=H*(Number(v('ptBoxRadius'))||0)/100;
+
+  const offsetX=W*(Number(v('ptBoxX'))||0)/100;
+  const offsetY=H*(Number(v('ptBoxY'))||0)/100;
+
+  // Move only the panel. The P/T text keeps its own normal position.
+  const boxX=rightX-width-padX+offsetX;
+  const boxY=y-padY+offsetY;
+  const boxW=width+padX*2;
+  const boxH=textH+padY*2;
+
+  roundedRectPath(c,boxX,boxY,boxW,boxH,radius);
+  c.fillStyle=rgbaFromHex(v('ptBoxColor')||'#08080a',(Number(v('ptBoxOpacity'))||0)/100);
+  c.fill();
+
+  const borderPct=Number(v('ptBoxBorderWidth'))||0;
+  if(borderPct>0){
+    c.strokeStyle=v('ptBoxBorderColor')||'#ffffff';
+    c.lineWidth=Math.max(1,H*borderPct/100);
+    c.stroke();
+  }
+
+  c.restore();
+}
+
+function drawPowerToughness(c,text,rightX,y,size,family='Georgia',strokeId='footerStroke',color='#f8f8f4'){
+  // Render power and toughness independently with identical font metrics,
+  // then center a slash between them. This avoids optical size differences
+  // from proportional numeral spacing/fallback behavior.
+  const m=String(text||'').trim().match(/^([^/]+)\/([^/]+)$/);
+  if(!m){
+    outlinedText(c,text,rightX,y,size,'right',false,family,strokeId);
+    return;
+  }
+  const power=m[1].trim(), toughness=m[2].trim();
+  c.font=font(size,true,false,family);
+  c.textBaseline='top';
+  c.textAlign='left';
+  c.lineJoin='round';
+
+  const pW=c.measureText(power).width;
+  const tW=c.measureText(toughness).width;
+  const slash=' / ';
+  const sW=c.measureText(slash).width;
+  const total=pW+sW+tW;
+  let x=rightX-total;
+
+  const strokeVal=Number(v(strokeId))||0;
+  const sw=size*strokeVal/10;
+  const drawPart=(str,dx)=>{
+    if(sw>0){
+      c.strokeStyle='rgba(0,0,0,.98)';
+      c.lineWidth=sw*2;
+      c.strokeText(str,dx,y);
+    }
+    c.fillStyle=color||'#f8f8f4';
+    c.fillText(str,dx,y);
+  };
+
+  drawPart(power,x); x+=pW;
+  drawPart(slash,x); x+=sW;
+  drawPart(toughness,x);
+}
+
+// Inline mana/tap symbols are deliberately slightly larger than the text cap height.
+function ruleFont(size){return font(size,true,false,v('rulesFont'))}
+function symbolSizeForText(size){return size*1.08}
+function splitRichWords(text){
+  const pieces=tokenizeSymbols(text),out=[];
+  for(const p of pieces){
+    if(/^\{/.test(p)) out.push({type:'sym',text:p});
+    else p.split(/(\s+)/).filter(Boolean).forEach(x=>out.push({type:/^\s+$/.test(x)?'space':'text',text:x}));
+  }
+  return out;
+}
+function wrapRich(c,text,size,maxW){
+  const symSize=symbolSizeForText(size);
+  const tokens=splitRichWords(text);
+  const lines=[];
+  let line=[],w=0;
+  const family=v('rulesFont');
+  const ruleFontCss=font(size,true,false,family);
+
+  for(const t of tokens){
+    c.font=ruleFontCss;
+    const tw=t.type==='sym' ? symSize : c.measureText(t.text).width;
+
+    if(t.type==='space' && !line.length) continue;
+
+    if(line.length && w+tw>maxW && t.type!=='space'){
+      while(line.at(-1)?.type==='space'){
+        const removed=line.pop();
+        c.font=ruleFontCss;
+        w-=c.measureText(removed.text).width;
+      }
+      lines.push(line);
+      line=[];
+      w=0;
+    }
+
+    line.push(t);
+    w+=tw;
+  }
+
+  while(line.at(-1)?.type==='space') line.pop();
+  if(line.length) lines.push(line);
+  return lines;
+}
+function drawRichLine(c,line,x,y,size,color=null){
+  const symSize=symbolSizeForText(size);
+  const family=v('rulesFont');
+  const ruleFontCss=font(size,true,false,family);
+  const strokeVal=Number(v('rulesStroke'))||0;
+  const sw=size*strokeVal/10;
+
+  c.textBaseline='top';
+  c.textAlign='left';
+  c.lineJoin='round';
+  let cx=x;
+
+  for(const t of line){
+    // IMPORTANT: restore the selected rules font before measuring EVERY token.
+    // outlinedText() can change canvas font state, so rich text must not rely
+    // on whatever font was left behind by the previous token.
+    c.font=ruleFontCss;
+
+    if(t.type==='sym'){
+      const img=state.symbols.get(t.text);
+      if(img){
+        c.drawImage(img,cx,y-size*.04,symSize,symSize);
+      }else{
+        // Fallback symbol text, explicitly using rules font.
+        outlinedText(c,t.text,cx,y,size*.72,'left',false,family,'rulesStroke',color||v('rulesColor'));
+      }
+      cx+=symSize;
+    }else if(t.type==='space'){
+      // Measure the space using the exact selected rules font.
+      c.font=ruleFontCss;
+      cx+=c.measureText(t.text).width;
+    }else{
+      // Measure BEFORE drawing so helper font changes cannot affect advance.
+      c.font=ruleFontCss;
+      const advance=c.measureText(t.text).width;
+
+      if(sw>0){
+        c.strokeStyle='rgba(0,0,0,.98)';
+        c.lineWidth=sw*2;
+        c.strokeText(t.text,cx,y);
+      }
+      c.fillStyle=color||v('rulesColor')||'#f8f8f4';
+      c.fillText(t.text,cx,y);
+
+      cx+=advance;
+    }
+  }
+}
+function drawManaCost(c,cost,x,y,size,gap){
+  const syms=(String(cost).match(/\{[^}]+\}/g)||[]);let cx=x;
+  for(const sym of syms){
+    const img=state.symbols.get(sym);
+    if(img)c.drawImage(img,cx,y,size,size);
+    else{
+      c.fillStyle='#dedbd2';c.beginPath();c.arc(cx+size/2,y+size/2,size/2,0,Math.PI*2);c.fill();
+      c.fillStyle='#111';c.font=font(size*.55);c.textAlign='center';c.textBaseline='middle';c.fillText(sym.replace(/[{}]/g,''),cx+size/2,y+size/2);
+    }
+    cx+=size+gap;
+  }
+}
+
+function layoutAtRulesSize(c,W,H,rulesPct){
+  const left=W*v('leftMargin')/100,right=W*v('rightMargin')/100,maxW=W-left-right;
+  const nameSize=H*v('nameSize')/100,typeSize=H*v('typeSize')/100,rulesSize=H*rulesPct/100;
+  const manaSize=H*v('manaSize')/100,manaGap=H*v('manaGap')/100;
+  const lineH=rulesSize*v('lineHeight'),paraGap=rulesSize*v('paraGap');
+  const paras=$('#oracleText').value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  const richLines=paras.map(p=>wrapRich(c,p,rulesSize,maxW));
+  const rulesH=richLines.reduce((a,lines)=>a+lines.length*lineH,0)+Math.max(0,paras.length-1)*paraGap;
+  const manaH=manaSize+H*.0065,nameH=nameSize*1.12,typeH=typeSize*1.34;
+  const total=manaH+nameH+typeH+rulesH;
+  const bottom=H*(v('blockBottom')+v('blockNudge'))/100;
+  const top=bottom-total;
+  return {left,right,maxW,nameSize,typeSize,rulesSize,manaSize,manaGap,lineH,paraGap,paras,richLines,top,bottom,total,rulesPct};
+}
+
+function validateRichLineWidths(c,L){
+  const family=v('rulesFont');
+  const ruleFontCss=font(L.rulesSize,true,false,family);
+  const symSize=symbolSizeForText(L.rulesSize);
+  let overflow=false;
+  for(const lines of L.richLines){
+    for(const line of lines){
+      let w=0;
+      for(const t of line){
+        c.font=ruleFontCss;
+        w += t.type==='sym' ? symSize : c.measureText(t.text).width;
+      }
+      if(w > L.maxW + 0.5) overflow=true;
+    }
+  }
+  return !overflow;
+}
+
+function computeLayout(c,W,H){
+  let rulesPct=v('rulesSize');
+  let L=layoutAtRulesSize(c,W,H,rulesPct);
+  if(v('autoFit')){
+    const minPct=v('minRulesSize'),topLimit=H*v('topLimit')/100;
+    while(L.top<topLimit && rulesPct>minPct+0.001){
+      rulesPct=Math.max(minPct,rulesPct-.05);
+      L=layoutAtRulesSize(c,W,H,rulesPct);
+    }
+  }
+  return L;
+}
+
+
+function roundedRectPath(c,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  c.beginPath();c.moveTo(x+rr,y);
+  c.arcTo(x+w,y,x+w,y+h,rr);c.arcTo(x+w,y+h,x,y+h,rr);
+  c.arcTo(x,y+h,x,y,rr);c.arcTo(x,y,x+w,y,rr);c.closePath();
+}
+function darkPanel(c,x,y,w,h,opacity,r){
+  c.save();
+  roundedRectPath(c,x,y,w,h,r);
+  c.fillStyle=rgbaFromHex(v('panelColor')||'#08080a',opacity);
+  c.fill();
+
+  const borderPct=Number(v('panelBorderWidth'))||0;
+  if(borderPct>0){
+    const px=Math.max(1,h*borderPct/100);
+    c.strokeStyle=v('panelBorderColor')||'#000000';
+    c.lineWidth=px;
+    c.stroke();
+  }
+  c.restore();
+}
+function drawArtWindow(c,art,x,y,w,h,filter='none'){
+  c.save();roundedRectPath(c,x,y,w,h,Math.min(w,h)*.025);c.clip();
+  c.fillStyle='#111';c.fillRect(x,y,w,h);
+  if(art){
+    const zoom=v('artZoom')||1;
+    const scale=Math.max(w/art.width,h/art.height)*zoom;
+    const dw=art.width*scale,dh=art.height*scale;
+    const dx=x+(w-dw)/2+w*v('artX')/100;
+    const dy=y+(h-dh)/2+h*v('artY')/100;
+    c.filter=filter;c.drawImage(art,dx,dy,dw,dh);c.filter='none';
+  }
+  c.restore();
+}
+function drawFooterCommon(c,L,W,H){
+  const footerSize=H*v('footerSize')/100,footerY=H*v('footerY')/100,ptSize=H*v('ptSize')/100,ptY=H*v('ptY')/100,proxyY=H*v('proxyY')/100;
+  const artist=$('#artist').value||'MINEMETH',proxy=$('#proxyLine').value||'For Proxy Play';
+  outlinedText(c,$('#collector').value,L.left,footerY,footerSize,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  outlinedText(c,$('#setLine').value,L.left,footerY+footerSize*1.35,footerSize,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  outlinedText(c,artist,L.left,footerY+footerSize*2.7,footerSize,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  drawPTBox(c,$('#pt').value,W-L.right,ptY,ptSize,W,H);
+  drawPowerToughness(c,$('#pt').value,W-L.right,ptY,ptSize,v('ptFont'),'footerStroke',v('ptColor'));
+  outlinedText(c,proxy,W-L.right,proxyY,footerSize*.95,'right',true,v('footerFont'),'footerStroke',v('proxyColor'));
+  return footerY;
+}
+
+
+function drawStandardFooterNoPT(c,L,W,H){
+  const footerSize=H*v('footerSize')/100;
+  const footerY=H*v('footerY')/100;
+  const proxyY=H*v('proxyY')/100;
+  const artist=$('#artist').value||'MINEMETH';
+  const proxy=$('#proxyLine').value||'For Proxy Play';
+
+  c.save();
+  c.translate(W*v('stdFooterX')/100,H*v('stdFooterYOffset')/100);
+  outlinedText(c,$('#collector').value,L.left,footerY,footerSize,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  outlinedText(c,$('#setLine').value,L.left,footerY+footerSize*1.35,footerSize,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  outlinedText(c,artist,L.left,footerY+footerSize*2.7,footerSize,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  outlinedText(c,proxy,W-L.right,proxyY,footerSize*.95,'right',true,v('footerFont'),'footerStroke',v('proxyColor'));
+  c.restore();
+  return footerY;
+}
+
+function getHighlightTerms(){return [];}
+function paragraphMatchesHighlight(){return false;}
+function updateHighlightStatus(){}
+function drawHighlightPanel(c,x,y,w,h,W,H){
+  const opacity=(Number(v('highlightPanelOpacity'))||0)/100;
+  const padPct=Number(v('highlightPadding'))||0;
+  const radiusPct=Number(v('highlightRadius'))||0;
+  const borderPct=Number(v('highlightBorderWidth'))||0;
+  const pad=H*padPct/100;
+  const r=H*radiusPct/100;
+
+  c.save();
+  roundedRectPath(c,x-pad,y-pad,w+pad*2,h+pad*2,r);
+  c.fillStyle=rgbaFromHex(v('highlightPanelColor')||'#08080a',opacity);
+  c.fill();
+  if(borderPct>0){
+    c.strokeStyle=v('highlightBorderColor')||'#ffffff';
+    c.lineWidth=Math.max(1,H*borderPct/100);
+    c.stroke();
+  }
+  c.restore();
+}
+
+
+function drawImageFit(c,img,x,y,w,h,opacity=1){
+  if(!img)return;
+  c.save();c.globalAlpha=Math.max(0,Math.min(1,opacity));
+  c.drawImage(img,x,y,w,h);c.restore();
+}
+function frameGraphicOpacity(){return ($('#frameGraphicsEnabled')?.checked===false)?0:(Number(v('frameGraphicOpacity'))||0)/100}
+function drawFrameGraphic(c,key,x,y,w,h){
+  const img=state.frameGraphics?.[key],op=frameGraphicOpacity();
+  if(img&&op>0)drawImageFit(c,img,x,y,w,h,op);
+}
+function strokeFrameRect(c,x,y,w,h,r,color,W,H){
+  const bw=H*(Number(v('stdBorderWidth'))||0)/100;
+  if(bw<=0)return;
+  c.save();roundedRectPath(c,x,y,w,h,r);c.strokeStyle=color;c.lineWidth=Math.max(1,bw);c.stroke();c.restore();
+}
+function drawWholeFrameGraphic(c,W,H){
+  drawFrameGraphic(c,'whole',0,0,W,H);
+}
+function drawFullArtFrameGraphics(c,W,H,baseL,panelX,panelY,panelW,panelH){
+  drawFrameGraphic(c,'title',baseL.left,H*.035,baseL.maxW,H*.095);
+  drawFrameGraphic(c,'art',0,0,W,H);
+  drawFrameGraphic(c,'type',panelX,panelY,panelW,Math.min(panelH,H*.09));
+  drawFrameGraphic(c,'rules',panelX,panelY,panelW,panelH);
+  const ptSize=H*v('ptSize')/100,ptY=H*v('ptY')/100;
+  drawFrameGraphic(c,'pt',W-baseL.right-H*.09,ptY-H*.012,H*.09,ptSize*1.5);
+  drawWholeFrameGraphic(c,W,H);
+}
+
+function renderBorderless(c,W,H,art,filter){
+  drawCover(c,art,W,H,filter);drawFade(c,W,H);
+  const L=computeLayout(c,W,H);let y=L.top;
+  drawManaCost(c,$('#manaCost').value,L.left,y,L.manaSize,L.manaGap);y+=L.manaSize+H*.0065;
+  outlinedText(c,$('#cardName').value,L.left,y,L.nameSize,'left',false,v('nameFont'),'nameStroke',v('nameColor'));y+=L.nameSize*1.12;
+  outlinedText(c,$('#typeLine').value,L.left,y,L.typeSize,'left',false,v('typeFont'),'typeStroke',v('typeColor'));y += L.typeSize*1.34 + H*v('typeRulesGap')/100;
+  L.richLines.forEach((lines,pi)=>{
+    const paraText=L.paras?.[pi]||'';
+    const isHi=paragraphMatchesHighlight(paraText,pi);
+    const paraY=y;
+    const paraH=Math.max(L.lineH,lines.length*L.lineH-L.rulesSize*.08);
+    
+    lines.forEach(line=>{
+      drawRichLine(c,line,L.left,y,L.rulesSize,v('rulesColor'));
+      y+=L.lineH;
+    });
+    if(pi<L.richLines.length-1)y+=L.paraGap;
+  });
+  c.save();
+  c.translate(W*v('stdFooterX')/100,H*v('stdFooterYOffset')/100);
+  const footerY=drawFooterCommon(c,L,W,H);
+  c.restore();
+  return {L,rulesEnd:y,footerY};
+}
+function renderFullArt(c,W,H,art,filter){
+  drawCover(c,art,W,H,filter);
+
+  const baseL=computeLayout(c,W,H);
+  const op=v('panelOpacity')/100;
+
+  // ---------- TITLE PANEL ----------
+  const titleX=baseL.left;
+  const titleY=H*.035;
+  const titleW=baseL.maxW;
+  const titleH=H*.095;
+  darkPanel(c,titleX,titleY,titleW,titleH,op*.78,W*.018);
+
+  const titlePad=W*.012;
+  const titleSize=baseL.nameSize*.88;
+
+  outlinedText(
+    c,$('#cardName').value,
+    titleX+titlePad,H*.053,titleSize,
+    'left',false,v('nameFont'),'nameStroke'
+  );
+
+  const syms=(String($('#manaCost').value).match(/\{[^}]+\}/g)||[]);
+  const manaSize=baseL.manaSize*.9;
+  const manaGap=baseL.manaGap;
+  const manaWidth=syms.length*manaSize+Math.max(0,syms.length-1)*manaGap;
+  drawManaCost(
+    c,$('#manaCost').value,
+    titleX+titleW-titlePad-manaWidth,
+    H*.052,manaSize,manaGap
+  );
+
+  // ---------- RULES PANEL ----------
+  // ONE geometry definition controls:
+  // panel drawing, wrapping width, clipping, and guide drawing.
+  const panelX=baseL.left;
+  const panelW=baseL.maxW;
+
+  // Keep the panel low, but ensure enough height for longer cards.
+  const panelShift=H*v('stylePanelY')/100;
+  const naturalBottom=H*.905;
+  const naturalTop=Math.max(H*.58,baseL.top-H*.018);
+  const naturalY=Math.min(naturalTop,naturalBottom-H*.20);
+  const panelH=naturalBottom-naturalY;
+
+  // Move panel + all enclosed text together.
+  const panelY=Math.max(H*.16,Math.min(H-panelH-H*.025,naturalY+panelShift));
+  const panelBottom=panelY+panelH;
+
+  darkPanel(c,panelX,panelY,panelW,panelH,op,W*.018);
+
+  const padX=W*.014;
+  const padTop=H*.016;
+  const padBottom=H*.018;
+
+  const innerX=panelX+padX;
+  const innerW=panelW-(2*padX);
+  const innerTop=panelY+padTop;
+  const innerBottom=panelY+panelH-padBottom;
+
+  let y=innerTop;
+
+  // Type line is inside the same panel.
+  outlinedText(
+    c,$('#typeLine').value,
+    innerX,y,baseL.typeSize,
+    'left',false,v('typeFont'),'typeStroke'
+  );
+  y+=baseL.typeSize*1.42 + H*v('typeRulesGap')/100;
+
+  // Fit Oracle text strictly inside the panel's inner width/height.
+  const paras=$('#oracleText').value
+    .split(/\n+/)
+    .map(s=>s.trim())
+    .filter(Boolean);
+
+  let rulesSize=baseL.rulesSize;
+  const minRules=H*v('minRulesSize')/100;
+  let richLines,lineH,paraGap,totalRulesH;
+
+  while(true){
+    richLines=paras.map(p=>wrapRich(c,p,rulesSize,innerW));
+    lineH=rulesSize*v('lineHeight');
+    paraGap=rulesSize*v('paraGap');
+
+    totalRulesH=
+      richLines.reduce((sum,lines)=>sum+(lines.length*lineH),0)
+      + Math.max(0,paras.length-1)*paraGap;
+
+    if((y+totalRulesH)<=innerBottom || rulesSize<=minRules+0.001){
+      break;
+    }
+
+    rulesSize=Math.max(minRules,rulesSize-H*.0005);
+  }
+
+  // Hard clip to the actual visible panel.
+  // Even a font-metric edge case cannot draw outside the box.
+  c.save();
+  c.beginPath();
+  c.rect(innerX,y,innerW,Math.max(0,innerBottom-y));
+  c.clip();
+
+  richLines.forEach((lines,pi)=>{
+    const paraText=paras[pi]||'';
+    const isHi=paragraphMatchesHighlight(paraText,pi);
+    const paraY=y;
+    const paraH=Math.max(lineH,lines.length*lineH-rulesSize*.08);
+    
+    lines.forEach(line=>{
+      drawRichLine(c,line,innerX,y,rulesSize,v('rulesColor'));
+      y+=lineH;
+    });
+    if(pi<richLines.length-1)y+=paraGap;
+  });
+
+  c.restore();
+
+  // Use the SAME exact panel rectangle for guides/QC.
+  const L={
+    left:panelX,
+    right:W-(panelX+panelW),
+    maxW:panelW,
+    top:panelY,
+    bottom:panelY+panelH,
+    rulesSize,
+    lineH,
+    paraGap,
+    richLines
+  };
+
+  const footerY=drawFooterCommon(c,L,W,H);
+  drawFullArtFrameGraphics(c,W,H,baseL,panelX,panelY,panelW,panelH);
+
+  return {
+    L,
+    rulesEnd:Math.min(y,innerBottom),
+    footerY
+  };
+}
+function renderStandard(c,W,H,art,filter){
+  c.clearRect(0,0,W,H);
+  const frameOp=v('frameOpacity')/100,panelOp=v('panelOpacity')/100;
+  const outer=W*.035,inner=W*.065;
+  c.fillStyle=rgbaFromHex(v('stdOuterColor')||'#1c1b19',frameOp);roundedRectPath(c,outer,outer,W-2*outer,H-2*outer,W*.025);c.fill();
+  strokeFrameRect(c,outer,outer,W-2*outer,H-2*outer,W*.025,v('stdOuterColor')||'#1c1b19',W,H);
+
+  // title bar
+  darkPanel(c,inner,H*.055,W-2*inner,H*.075,panelOp*.95,W*.012);
+  strokeFrameRect(c,inner,H*.055,W-2*inner,H*.075,W*.012,v('stdTitleBorderColor')||'#08080a',W,H);
+  drawFrameGraphic(c,'title',inner,H*.055,W-2*inner,H*.075);
+
+  // art window
+  drawArtWindow(c,art,inner,H*.145,W-2*inner,H*.405,filter);
+  strokeFrameRect(c,inner,H*.145,W-2*inner,H*.405,W*.01,v('stdArtBorderColor')||'#08080a',W,H);
+  drawFrameGraphic(c,'art',inner,H*.145,W-2*inner,H*.405);
+
+  // Type/rules area moves as one unit with Panel / Text Y.
+  const panelShift=H*v('stylePanelY')/100;
+  const typeBarY=Math.max(H*.20,Math.min(H*.70,H*.565+panelShift));
+  const rulesY=Math.max(typeBarY+H*.065,Math.min(H*.72,H*.64+panelShift));
+
+  // type bar
+  darkPanel(c,inner,typeBarY,W-2*inner,H*.058,panelOp*.94,W*.01);
+  strokeFrameRect(c,inner,typeBarY,W-2*inner,H*.058,W*.01,v('stdTypeBorderColor')||'#08080a',W,H);
+  drawFrameGraphic(c,'type',inner,typeBarY,W-2*inner,H*.058);
+
+  // rules box
+  c.save();roundedRectPath(c,inner,rulesY,W-2*inner,H*.265,W*.012);
+  c.fillStyle=`rgba(230,224,208,${Math.max(.72,panelOp)})`;c.fill();
+  const stdBorderPct=Number(v('stdBorderWidth'))||0;
+  if(stdBorderPct>0){
+    c.strokeStyle=v('stdRulesBorderColor')||'#08080a';
+    c.lineWidth=Math.max(1,H*stdBorderPct/100);
+    c.stroke();
+  }
+  c.restore();
+
+  const nameSize=H*.0325,typeSize=H*.0215,manaSize=H*.0295,manaGap=H*.0042;
+  outlinedText(c,$('#cardName').value,inner+W*.014+W*v('stdNameX')/100,H*.072+H*v('stdNameY')/100,nameSize,'left',false,v('nameFont'),'nameStroke',v('nameColor'));
+  const syms=(String($('#manaCost').value).match(/\{[^}]+\}/g)||[]);
+  const manaWidth=syms.length*manaSize+Math.max(0,syms.length-1)*manaGap;
+  drawManaCost(c,$('#manaCost').value,W-inner-W*.014-manaWidth+W*v('stdManaX')/100,H*.07+H*v('stdManaY')/100,manaSize,manaGap);
+  outlinedText(c,$('#typeLine').value,inner+W*.014+W*v('stdTypeX')/100,typeBarY+H*.013+H*v('stdTypeY')/100,typeSize,'left',false,v('typeFont'),'typeStroke',v('typeColor'));
+
+  // Fit rules inside the light box.
+  let rulesSize=H*.0205;
+  const minRules=H*.0155,maxW=W-2*inner-W*.036;
+  const paras=$('#oracleText').value.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  let richLines,lineH,paraGap,total;
+  while(true){
+    richLines=paras.map(p=>wrapRich(c,p,rulesSize,maxW));
+    lineH=rulesSize*v('lineHeight');paraGap=rulesSize*v('paraGap');
+    total=richLines.reduce((a,l)=>a+l.length*lineH,0)+Math.max(0,paras.length-1)*paraGap;
+    if(total<=Math.max(H*.08,H*.225-H*v('typeRulesGap')/100)||rulesSize<=minRules)break;
+    rulesSize-=H*.00045;
+  }
+
+  // Draw rules as dark text, with inline symbols.
+  let y=rulesY+H*.018 + H*v('typeRulesGap')/100 + H*v('stdRulesY')/100;
+  const family=v('rulesFont'),ruleCss=font(rulesSize,true,false,family);
+  richLines.forEach((lines,pi)=>{
+    const paraText=paras[pi]||'';
+    const isHi=paragraphMatchesHighlight(paraText,pi);
+    const paraY=y;
+    const paraH=Math.max(lineH,lines.length*lineH-rulesSize*.08);
+    const textX=inner+W*.018 + W*v('stdRulesX')/100;
+    
+
+    lines.forEach(line=>{
+      let cx=textX;const symSize=symbolSizeForText(rulesSize);
+      const lineColor=v('rulesColor');
+      for(const t of line){
+        c.font=ruleCss;c.textBaseline='top';c.textAlign='left';
+        if(t.type==='sym'){
+          const img=state.symbols.get(t.text);
+          if(img)c.drawImage(img,cx,y-rulesSize*.04,symSize,symSize);
+          else {c.fillStyle=lineColor;c.fillText(t.text,cx,y)}
+          cx+=symSize;
+        } else {
+          c.fillStyle=lineColor;c.fillText(t.text,cx,y);cx+=c.measureText(t.text).width;
+        }
+      }
+      y+=lineH;
+    });
+    if(pi<richLines.length-1)y+=paraGap;
+  });
+
+  const L={left:inner,right:inner,maxW:W-2*inner,top:rulesY,bottom:rulesY+H*.265,rulesSize,lineH,paraGap,richLines};
+  const footerY=drawStandardFooterNoPT(c,L,W,H);
+  const ptSize=H*v('ptSize')/100,ptY=H*v('ptY')/100;
+  const ptBoxX=W-inner-H*.09,ptBoxY=ptY-H*.012,ptBoxW=H*.09,ptBoxH=ptSize*1.5;
+  const ptText=$('#pt').value||'';
+  const showStandardPT=!!v('stdPTBoxEnabled') && !!ptText.trim();
+
+  if(showStandardPT){
+    c.save();
+    roundedRectPath(c,ptBoxX,ptBoxY,ptBoxW,ptBoxH,H*.01);
+    c.fillStyle=rgbaFromHex(v('stdPTFillColor')||v('stdPTBorderColor')||'#c9c0a8',v('stdPTFillOpacity')/100);
+    c.fill();
+    c.restore();
+    strokeFrameRect(c,ptBoxX,ptBoxY,ptBoxW,ptBoxH,H*.01,v('stdPTBorderColor')||'#08080a',W,H);
+    drawFrameGraphic(c,'pt',ptBoxX,ptBoxY,ptBoxW,ptBoxH);
+
+    // Draw the P/T last so neither the box nor an uploaded P/T graphic can cover it.
+    outlinedText(
+      c,ptText,
+      ptBoxX+ptBoxW/2+W*v('stdPTX')/100,
+      ptBoxY+ptBoxH*.18+H*v('stdPTYOffset')/100,
+      ptSize,'center',false,v('ptFont'),'footerStroke',v('ptColor')
+    );
+  }
+  drawWholeFrameGraphic(c,W,H);
+  return {L,rulesEnd:y,footerY};
+}
+
+
+
+function ffDrawArtwork(c,img,W,H,filter,layer){
+  if(!img){c.fillStyle='#10151d';c.fillRect(0,0,W,H);return}
+  const zoom=v('artZoom');
+  const baseX=v('artX')/100,baseY=v('artY')/100;
+  const layerX=(Number(layer?.x)||0)/100,layerY=(Number(layer?.y)||0)/100;
+  const scale=Math.max(W/img.width,H/img.height)*zoom;
+  const dw=img.width*scale,dh=img.height*scale;
+  const x=(W-dw)/2+(baseX+layerX)*W;
+  const y=(H-dh)/2+(baseY+layerY)*H;
+  c.save();c.filter=filter;c.drawImage(img,x,y,dw,dh);c.restore();
+}
+function ffDrawFade(c,W,H,layer){
+  if(!v('fadeEnabled'))return;
+  const shift=(Number(layer?.y)||0);
+  const start=Math.max(0,Math.min(100,v('fadeStart')+shift));
+  const y0=H*start/100;
+  const strength=v('fadeStrength')/100,curve=v('fadeCurve');
+  const g=c.createLinearGradient(0,y0,0,H);
+  g.addColorStop(0,'rgba(0,0,0,0)');
+  g.addColorStop(Math.max(.01,Math.min(.99,curve)),`rgba(0,0,0,${strength*.55})`);
+  g.addColorStop(1,`rgba(0,0,0,${strength})`);
+  c.save();c.fillStyle=g;c.fillRect(0,y0,W,H-y0);c.restore();
+}
+
+function ffSetBounds(id,x,y,w,h,W,H){
+  if(W===PREVIEW_W && H===PREVIEW_H){
+    state.freeform.bounds.set(id,{x,y,w,h});
+  }
+}
+function ffMeasureMana(c,cost,size,gap){
+  const syms=(String(cost).match(/\{[^}]+\}/g)||[]);
+  return {w:syms.length*size+Math.max(0,syms.length-1)*gap,h:size};
+}
+function ffTextBounds(c,text,x,y,size,family,align='left'){
+  c.font=font(size,true,false,family);
+  const m=c.measureText(String(text||''));
+  const w=Math.max(1,m.width);
+  const h=size*1.15;
+  return {x:align==='right'?x-w:x,y,w,h};
+}
+function drawFreeformFooterPair(c,W,H,layer){
+  const size=H*(Number(layer.fontSize)||v('footerSize'))/100;
+  const x=W*layer.x/100,y=H*layer.y/100;
+  outlinedText(c,$('#collector').value,x,y,size,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  outlinedText(c,$('#setLine').value,x,y+size*1.35,size,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+  const b1=ffTextBounds(c,$('#collector').value,x,y,size,v('footerFont'));
+  const b2=ffTextBounds(c,$('#setLine').value,x,y+size*1.35,size,v('footerFont'));
+  ffSetBounds('collector',Math.min(b1.x,b2.x),y,Math.max(b1.w,b2.w),size*2.55,W,H);
+}
+function drawFreeformRules(c,W,H,layer){
+  const x=W*layer.x/100,y0=H*layer.y/100;
+  const boxW=W*Math.max(10,Math.min(95,Number(layer.w)||89.5))/100;
+  const boxH=H*Math.max(5,Math.min(60,Number(layer.h)||22))/100;
+  const maxW=Math.min(boxW,Math.max(20,W-x-W*.01));
+  let rulesSize=H*(Number(layer.fontSize)||v('rulesSize'))/100;
+  const minRules=H*v('minRulesSize')/100;
+  const paras=$('#oracleText').value.split(/\n+/).map(t=>t.trim()).filter(Boolean);
+  let rich,lineH,paraGap,total;
+  while(true){
+    rich=paras.map(p=>wrapRich(c,p,rulesSize,maxW));
+    lineH=rulesSize*v('lineHeight');paraGap=rulesSize*v('paraGap');
+    total=rich.reduce((a,l)=>a+l.length*lineH,0)+Math.max(0,rich.length-1)*paraGap;
+    if(total<=boxH || rulesSize<=minRules+.001)break;
+    rulesSize=Math.max(minRules,rulesSize-H*.0005);
+  }
+  let y=y0;
+  c.save();c.beginPath();c.rect(x,y0,maxW,boxH);c.clip();
+  rich.forEach((lines,pi)=>{lines.forEach(line=>{drawRichLine(c,line,x,y,rulesSize,v('rulesColor'));y+=lineH});if(pi<rich.length-1)y+=paraGap});
+  c.restore();
+  ffSetBounds('rules',x,y0,maxW,boxH,W,H);
+  return Math.min(y,y0+boxH);
+}
+function drawFreeformPTBox(c,W,H,ptLayer){
+  const layer=ffLayer('ptBox');
+  if(!layer||!layer.visible||!v('ptBoxEnabled'))return;
+  const size=H*(Number(ptLayer.fontSize)||v('ptSize'))/100;
+  const rightX=W*ptLayer.x/100,y=H*ptLayer.y/100;
+  const family=v('ptFont')||'Georgia';
+  c.save();c.font=font(size,true,false,family);c.textBaseline='top';c.textAlign='left';
+  const text=String($('#pt').value||'');
+  const width=c.measureText(text).width;
+  const metrics=c.measureText(text);
+  const textH=Math.max(size,(metrics.actualBoundingBoxAscent||size*.8)+(metrics.actualBoundingBoxDescent||size*.2));
+  const padX=H*v('ptBoxPadX')/100,padY=H*v('ptBoxPadY')/100;
+  const radius=H*v('ptBoxRadius')/100;
+  const offsetX=W*((Number(v('ptBoxX'))||0)+layer.x)/100;
+  const offsetY=H*((Number(v('ptBoxY'))||0)+layer.y)/100;
+  const x=rightX-width-padX+offsetX,boxY=y-padY+offsetY,boxW=width+padX*2,boxH=textH+padY*2;
+  roundedRectPath(c,x,boxY,boxW,boxH,radius);
+  c.fillStyle=rgbaFromHex(v('ptBoxColor')||'#08080a',v('ptBoxOpacity')/100);c.fill();
+  const bw=Number(v('ptBoxBorderWidth'))||0;
+  if(bw>0){c.strokeStyle=v('ptBoxBorderColor')||'#fff';c.lineWidth=Math.max(1,H*bw/100);c.stroke()}
+  c.restore();
+  ffSetBounds('ptBox',x,boxY,boxW,boxH,W,H);
+}
+function drawFreeformGrid(c,W,H){
+  if(!state.freeform.showGrid)return;
+  const pct=Math.max(.5,Math.min(20,Number(state.freeform.gridSize)||2.5));
+  const sx=W*pct/100,sy=H*pct/100;
+  c.save();c.lineWidth=Math.max(1,W*.00055);
+  let ix=0;for(let x=0;x<=W+.5;x+=sx,ix++){const major=ix%4===0;c.strokeStyle=major?'rgba(120,190,255,.42)':'rgba(120,190,255,.20)';c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()}
+  let iy=0;for(let y=0;y<=H+.5;y+=sy,iy++){const major=iy%4===0;c.strokeStyle=major?'rgba(120,190,255,.42)':'rgba(120,190,255,.20)';c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}
+  c.restore();
+}
+
+function renderFreeform(c,W,H,art,filter,interactive=true){
+  c.clearRect(0,0,W,H);
+  if(W===PREVIEW_W&&H===PREVIEW_H)state.freeform.bounds.clear();
+
+  let rulesEnd=H*.75;
+  let footerY=H*.92;
+
+  for(const layer of state.freeform.layers){
+    if(!layer.visible)continue;
+
+    switch(layer.id){
+      case 'artwork':{
+        ffDrawArtwork(c,art,W,H,filter,layer);
+        ffSetBounds('artwork',0,0,W,H,W,H);
+        break;
+      }
+      case 'fade':{
+        ffDrawFade(c,W,H,layer);
+        const fy=Math.max(0,Math.min(H,H*(v('fadeStart')+layer.y)/100));
+        ffSetBounds('fade',0,fy,W,H-fy,W,H);
+        break;
+      }
+      case 'frameWhole':{
+        drawFrameGraphic(c,'whole',0,0,W,H);ffSetBounds('frameWhole',0,0,W,H,W,H);break;
+      }
+      case 'frameArt':{
+        drawFrameGraphic(c,'art',W*layer.x/100,H*layer.y/100,W,H);
+        ffSetBounds('frameArt',W*layer.x/100,H*layer.y/100,W,H,W,H);break;
+      }
+      case 'frameTitle':{
+        const x=W*layer.x/100,y=H*layer.y/100,w=W*.895,h=H*.095;
+        drawFrameGraphic(c,'title',x,y,w,h);ffSetBounds('frameTitle',x,y,w,h,W,H);break;
+      }
+      case 'frameType':{
+        const x=W*layer.x/100,y=H*layer.y/100,w=W*.895,h=H*.06;
+        drawFrameGraphic(c,'type',x,y,w,h);ffSetBounds('frameType',x,y,w,h,W,H);break;
+      }
+      case 'frameRules':{
+        const rules=ffLayer('rules');const x=W*layer.x/100,y=H*layer.y/100;
+        const w=W*(Number(rules?.w)||89.5)/100,h=H*(Number(rules?.h)||22)/100;
+        drawFrameGraphic(c,'rules',x,y,w,h);ffSetBounds('frameRules',x,y,w,h,W,H);break;
+      }
+      case 'framePT':{
+        const x=W*layer.x/100,y=H*layer.y/100,w=W*.14,h=H*.065;
+        drawFrameGraphic(c,'pt',x,y,w,h);ffSetBounds('framePT',x,y,w,h,W,H);break;
+      }
+      case 'mana':{
+        const size=H*(Number(layer.fontSize)||v('manaSize'))/100,gap=H*v('manaGap')/100,x=W*layer.x/100,y=H*layer.y/100;
+        drawManaCost(c,$('#manaCost').value,x,y,size,gap);
+        const b=ffMeasureMana(c,$('#manaCost').value,size,gap);ffSetBounds('mana',x,y,b.w,b.h,W,H);
+        break;
+      }
+      case 'name':{
+        const size=H*(Number(layer.fontSize)||v('nameSize'))/100,x=W*layer.x/100,y=H*layer.y/100;
+        outlinedText(c,$('#cardName').value,x,y,size,'left',false,v('nameFont'),'nameStroke',v('nameColor'));
+        const b=ffTextBounds(c,$('#cardName').value,x,y,size,v('nameFont'));ffSetBounds('name',b.x,b.y,b.w,b.h,W,H);
+        break;
+      }
+      case 'type':{
+        const size=H*(Number(layer.fontSize)||v('typeSize'))/100,x=W*layer.x/100,y=H*layer.y/100;
+        outlinedText(c,$('#typeLine').value,x,y,size,'left',false,v('typeFont'),'typeStroke',v('typeColor'));
+        const b=ffTextBounds(c,$('#typeLine').value,x,y,size,v('typeFont'));ffSetBounds('type',b.x,b.y,b.w,b.h,W,H);
+        break;
+      }
+      case 'rules': rulesEnd=drawFreeformRules(c,W,H,layer);break;
+      case 'collector': drawFreeformFooterPair(c,W,H,layer);footerY=H*layer.y/100;break;
+      case 'artist':{
+        const size=H*(Number(layer.fontSize)||v('footerSize'))/100,x=W*layer.x/100,y=H*layer.y/100,text=$('#artist').value||'MINEMETH';
+        outlinedText(c,text,x,y,size,'left',false,v('footerFont'),'footerStroke',v('footerColor'));
+        const b=ffTextBounds(c,text,x,y,size,v('footerFont'));ffSetBounds('artist',b.x,b.y,b.w,b.h,W,H);
+        break;
+      }
+      case 'proxy':{
+        const size=H*(Number(layer.fontSize)||v('footerSize')*.95)/100,x=W*layer.x/100,y=H*layer.y/100,text=$('#proxyLine').value||'For Proxy Play';
+        outlinedText(c,text,x,y,size,'right',true,v('footerFont'),'footerStroke',v('proxyColor'));
+        const b=ffTextBounds(c,text,x,y,size,v('footerFont'),'right');ffSetBounds('proxy',b.x,b.y,b.w,b.h,W,H);
+        break;
+      }
+      case 'ptBox':{
+        const ptLayer=ffLayer('pt');if(ptLayer)drawFreeformPTBox(c,W,H,ptLayer);break;
+      }
+      case 'pt':{
+        const size=H*(Number(layer.fontSize)||v('ptSize'))/100,x=W*layer.x/100,y=H*layer.y/100,text=$('#pt').value;
+        drawPowerToughness(c,text,x,y,size,v('ptFont'),'footerStroke',v('ptColor'));
+        const b=ffTextBounds(c,text,x,y,size,v('ptFont'),'right');ffSetBounds('pt',b.x,b.y,b.w,b.h,W,H);
+        break;
+      }
+    }
+  }
+
+  if(interactive) drawFreeformGrid(c,W,H);
+
+  const selected=ffLayer(state.freeform.selected);
+  if(interactive && selected && selected.visible){
+    const b=state.freeform.bounds.get(selected.id);
+    if(b){
+      c.save();
+      c.setLineDash([12,8]);
+      c.lineWidth=3;
+      c.strokeStyle=selected.locked?'rgba(255,190,50,.95)':'rgba(70,170,255,.95)';
+      c.strokeRect(b.x-5,b.y-5,b.w+10,b.h+10);
+      const tag=`${selected.name}${selected.locked?' 🔒':''}`;
+      c.font='700 24px system-ui';c.textBaseline='bottom';c.textAlign='left';
+      const tw=c.measureText(tag).width+16;
+      const ty=Math.max(30,b.y-8);
+      c.fillStyle='rgba(10,15,22,.92)';c.fillRect(Math.max(0,b.x-5),ty-30,tw,30);
+      c.fillStyle='#fff';c.fillText(tag,Math.max(8,b.x+3),ty-5);
+      c.restore();
+    }
+  }
+
+  return {L:{left:0,right:0,maxW:W,top:0,bottom:H,rulesSize:H*v('rulesSize')/100},rulesEnd,footerY};
+}
+
+
+function drawBleedEdgeGuide(c,W,H){
+  const insetX=W*(0.65/63);
+  const insetY=H*(0.65/88);
+
+  c.save();
+  c.setLineDash([12,8]);
+  c.lineWidth=Math.max(2,W*.0014);
+  c.strokeStyle='rgba(255,80,80,.92)';
+  c.strokeRect(
+    insetX,
+    insetY,
+    Math.max(0,W-insetX*2),
+    Math.max(0,H-insetY*2)
+  );
+  c.restore();
+}
+
+function renderTo(c,W,H,version,drawGuides=true){
+  c.clearRect(0,0,W,H);
+  const art=version===2?(state.art2||state.art1):state.art1;
+  const filter=version===2?`contrast(${v('v2Contrast')}%) saturate(${v('v2Saturation')}%) brightness(${v('v2Brightness')}%)`:'none';
+  const style=v('cardStyle')||'borderless';
+
+  let result;
+  if(style==='freeform') result=renderFreeform(c,W,H,art,filter,drawGuides);
+  else if(style==='standard') result=renderStandard(c,W,H,art,filter);
+  else if(style==='fullart') result=renderFullArt(c,W,H,art,filter);
+  else result=renderBorderless(c,W,H,art,filter);
+
+  const L=result.L,footerY=result.footerY,rulesEnd=result.rulesEnd;
+
+  if(style!=='freeform' && drawGuides && v('showGuides')){
+    c.save();
+    c.setLineDash([10,10]);
+    c.lineWidth=2;
+
+    c.strokeStyle='rgba(60,180,255,.65)';
+
+    if(style==='standard'){
+      c.strokeRect(W*.065,H*.145,W*.87,H*.405);
+      const guideShift=H*v('stylePanelY')/100;
+      const guideTypeY=Math.max(H*.20,Math.min(H*.70,H*.565+guideShift));
+      const guideRulesY=Math.max(guideTypeY+H*.065,Math.min(H*.72,H*.64+guideShift));
+      c.strokeRect(W*.065,guideTypeY,W*.87,H*.058);
+      c.strokeRect(W*.065,guideRulesY,W*.87,H*.265);
+    }else{
+      // For Full Art, this is now the ACTUAL visible rules panel.
+      c.strokeRect(L.left,L.top,L.maxW,Math.max(0,L.bottom-L.top));
+
+      if(style==='fullart'){
+        const padX=W*.014;
+        const padTop=H*.016;
+        const padBottom=H*.018;
+        c.strokeStyle='rgba(80,255,160,.72)';
+        c.strokeRect(
+          L.left+padX,
+          L.top+padTop,
+          L.maxW-(2*padX),
+          Math.max(0,(L.bottom-L.top)-padTop-padBottom)
+        );
+      }
+    }
+
+    c.strokeStyle='rgba(255,190,50,.7)';
+    c.beginPath();
+    c.moveTo(0,footerY);
+    c.lineTo(W,footerY);
+    c.stroke();
+
+    c.restore();
+  }
+  if(drawGuides && $('#showBleedGuide')?.checked){
+    drawBleedEdgeGuide(c,W,H);
+  }
+
+  qc(L,rulesEnd,footerY,H);
+}
+function qc(L,rulesEnd,footerY,H){
+  const stateEl=$('#qcState'),details=$('#qcDetails');const gap=footerY-rulesEnd;let msgs=[];
+  if(!state.card)msgs.push('Card is not Scryfall-locked.');
+  if(!state.art1)msgs.push('Original artwork missing.');
+  if(gap<0)msgs.push('Rules collide with footer. Raise Block bottom, reduce Rules size, or enable Auto-fit.');
+  else if(gap<H*.012)msgs.push('Rules are very close to footer.');
+  if(v('cardStyle')!=='freeform' && L.top < H*v('topLimit')/100) msgs.push('Text block has grown above the preferred upper limit.');
+  const symMissing=(String($('#manaCost').value).match(/\{[^}]+\}/g)||[]).filter(s=>!state.symbols.has(s));
+  if(symMissing.length)msgs.push(`Waiting for symbols: ${[...new Set(symMissing)].join(', ')}`);
+  if(!msgs.length){
+    stateEl.textContent='PASS';stateEl.className='pill ok';
+    details.textContent=`Bottom-anchored layout: ${Math.round(gap)} px preview clearance above footer. Rules render at ${(L.rulesPct).toFixed(2)}% of card height.`;
+  }else{
+    stateEl.textContent='CHECK';stateEl.className='pill warn';details.textContent=msgs.join(' ');
+  }
+}
+function render(){renderTo(ctx,PREVIEW_W,PREVIEW_H,state.version)}
+function scheduleRender(){clearTimeout(state.renderTimer);state.renderTimer=setTimeout(render,40)}
+
+function blobForVersion(version){
+  return new Promise(resolve=>{
+    const c=document.createElement('canvas');c.width=EXPORT_W;c.height=EXPORT_H;
+    renderTo(c.getContext('2d'),EXPORT_W,EXPORT_H,version,false);
+    c.toBlob(resolve,'image/png');
+  });
+}
+async function downloadVersion(version){
+  const blob=await blobForVersion(version);if(!blob)return;
+  const a=document.createElement('a'),safe=($('#cardName').value||'card').replace(/[^a-z0-9]+/gi,'_');
+  a.download=`${safe}_V${version}.png`;a.href=URL.createObjectURL(blob);a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+async function exportBoth(){
+  await downloadVersion(1);
+  setTimeout(()=>downloadVersion(2),350);
+}
+
+
+function resetV2Adjustments(){
+  $('#v2Contrast').value=104;
+  $('#v2Saturation').value=97;
+  $('#v2Brightness').value=100;
+  showOutputs();scheduleRender();
+}
+
+function saveTemplate(){
+  const o={};Object.keys(defaults).forEach(k=>{const el=$(`#${k}`);if(el)o[k]=el.value});
+  ['fadeEnabled','autoGrow','autoFit','showGuides','showBleedGuide'].forEach(k=>{const el=$('#'+k);if(el)o[k]=el.checked});
+  o.artist=$('#artist').value;o.proxyLine=$('#proxyLine').value;
+  localStorage.setItem('mtgProxyTemplate_v8',JSON.stringify(o));$('#fetchStatus').textContent='Template saved in this browser.';
+}
+function applyProjectBaseline(){
+  Object.entries(defaults).forEach(([k,val])=>{const el=$(`#${k}`);if(el)el.value=val});
+  $('#fadeEnabled').checked=true;$('#autoGrow').checked=true;$('#autoFit').checked=true;$('#showGuides').checked=true;if($('#showBleedGuide'))$('#showBleedGuide').checked=true;
+  showOutputs();scheduleRender();
+}
+
+
+function resetFontsTextStyle(){
+  const ids=['nameStroke','typeStroke','rulesStroke','footerStroke','nameColor','typeColor','rulesColor','footerColor','ptColor','proxyColor',
+             'nameFont','typeFont','rulesFont','footerFont','ptFont'];
+  ids.forEach(id=>{
+    const el=$('#'+id);
+    if(!el || defaults[id]===undefined)return;
+    el.value=defaults[id];
+  });
+  if($('#linkOutlines')) $('#linkOutlines').checked=false;
+  if($('#linkTextColors')) $('#linkTextColors').checked=false;
+  showOutputs();
+  scheduleRender();
+}
+
+
+let textColorSyncing=false;
+function syncTextColors(sourceId){
+  const link=$('#linkTextColors');
+  if(!link || !link.checked || textColorSyncing)return;
+  textColorSyncing=true;
+  const source=$('#'+sourceId);
+  const value=source.value;
+  ['nameColor','typeColor','rulesColor','footerColor','ptColor','proxyColor'].forEach(id=>{
+    if(id===sourceId)return;
+    const el=$('#'+id); if(el)el.value=value;
+  });
+  textColorSyncing=false;
+  scheduleRender();
+}
+
+let outlineSyncing=false;
+function syncOutlineSliders(sourceId){
+  const link=$('#linkOutlines');
+  if(!link || !link.checked || outlineSyncing)return;
+  outlineSyncing=true;
+  const source=$('#'+sourceId);
+  const value=source.value;
+  
+['nameColor','typeColor','rulesColor','footerColor','ptColor','proxyColor'].forEach(id=>{
+  const el=$('#'+id);
+  if(el) el.addEventListener('input',()=>syncTextColors(id));
+});
+if($('#linkTextColors')){
+  $('#linkTextColors').addEventListener('change',()=>{
+    if($('#linkTextColors').checked) syncTextColors('nameColor');
+    scheduleRender();
+  });
+}
+
+['nameStroke','typeStroke','rulesStroke','footerStroke'].forEach(id=>{
+    if(id===sourceId)return;
+    const el=$('#'+id);
+    if(el) el.value=value;
+  });
+  showOutputs();
+  outlineSyncing=false;
+}
+
+function resetCardStyleSettings(){
+  if($('#cardStyle')) $('#cardStyle').value='borderless';
+  if($('#panelOpacity')) $('#panelOpacity').value=78;
+  if($('#frameOpacity')) $('#frameOpacity').value=94;
+  if($('#stylePanelY')) $('#stylePanelY').value=0;
+  if($('#typeRulesGap')) $('#typeRulesGap').value=1.2;
+  if($('#panelColor')) $('#panelColor').value='#08080a';
+  if($('#panelBorderColor')) $('#panelBorderColor').value='#000000';
+  if($('#panelBorderWidth')) $('#panelBorderWidth').value=0;
+  showOutputs();
+  scheduleRender();
+}
+
+
+
+
+
+function resetPTBoxSettings(){
+  if($('#ptBoxEnabled')) $('#ptBoxEnabled').checked=false;
+  if($('#ptBoxColor')) $('#ptBoxColor').value='#08080a';
+  if($('#ptBoxOpacity')) $('#ptBoxOpacity').value=82;
+  if($('#ptBoxBorderColor')) $('#ptBoxBorderColor').value='#ffffff';
+  if($('#ptBoxBorderWidth')) $('#ptBoxBorderWidth').value=.18;
+  if($('#ptBoxPadX')) $('#ptBoxPadX').value=1.2;
+  if($('#ptBoxPadY')) $('#ptBoxPadY').value=.6;
+  if($('#ptBoxX')) $('#ptBoxX').value=0;
+  if($('#ptBoxY')) $('#ptBoxY').value=0;
+  if($('#ptBoxRadius')) $('#ptBoxRadius').value=.8;
+  showOutputs();
+  scheduleRender();
+}
+
+function resetSection5Settings(){
+  if($('#fadeEnabled')) { const e=$('#fadeEnabled'); if(e.type==='checkbox') e.checked=e.defaultChecked; else if(e.tagName==='SELECT') e.selectedIndex=0; else e.value=e.defaultValue; }
+  if($('#fadeStart')) { const e=$('#fadeStart'); if(e.type==='checkbox') e.checked=e.defaultChecked; else if(e.tagName==='SELECT') e.selectedIndex=0; else e.value=e.defaultValue; }
+  if($('#fadeStrength')) { const e=$('#fadeStrength'); if(e.type==='checkbox') e.checked=e.defaultChecked; else if(e.tagName==='SELECT') e.selectedIndex=0; else e.value=e.defaultValue; }
+  if($('#fadeCurve')) { const e=$('#fadeCurve'); if(e.type==='checkbox') e.checked=e.defaultChecked; else if(e.tagName==='SELECT') e.selectedIndex=0; else e.value=e.defaultValue; }
+  showOutputs();
+  scheduleRender();
+}
+
+function resetLayout(){
+  const ids=['blockBottom','blockNudge','leftMargin','rightMargin','nameSize','typeSize','rulesSize',
+    'lineHeight','paraGap','manaSize','manaGap','footerSize','ptSize','ptY','footerY','proxyY',
+    'minRulesSize','topLimit'];
+  ids.forEach(id=>{const el=$('#'+id);if(el && defaults[id]!==undefined)el.value=defaults[id]});
+  $('#autoGrow').checked=true;$('#autoFit').checked=true;$('#showGuides').checked=true;if($('#showBleedGuide'))$('#showBleedGuide').checked=true;
+  showOutputs();scheduleRender();
+}
+async function loadCustomFont(input){
+  const file=input.files&&input.files[0]; if(!file)return;
+  try{
+    const buf=await file.arrayBuffer();
+    const face=new FontFace('CustomProxyFont',buf);
+    await face.load();document.fonts.add(face);
+    ['nameFont','typeFont','rulesFont','footerFont','ptFont'].forEach(id=>{
+      const sel=$('#'+id);
+      if(![...sel.options].some(o=>o.value==='CustomProxyFont')){
+        const opt=document.createElement('option');opt.value='CustomProxyFont';opt.textContent='Custom uploaded font';sel.appendChild(opt);
+      }
+    });
+    scheduleRender();
+  }catch(e){alert('Could not load that font file: '+e.message);}
+}
+
+function resetTemplate(){applyProjectBaseline()}
+function loadTemplate(){
+  try{
+    const o=JSON.parse(localStorage.getItem('mtgProxyTemplate_v8')||'null');if(!o)return;
+    Object.entries(o).forEach(([k,val])=>{const el=$(`#${k}`);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val});
+  }catch{}
+}
+
+
+function ffLayerIndex(id){return state.freeform.layers.findIndex(x=>x.id===id)}
+function ffSelect(id,openSection=true){
+  const layer=ffLayer(id);if(!layer)return;
+  state.freeform.selected=id;
+  updateFreeformInspector();
+  renderLayersPanel();
+  const uiMap={artwork:'artwork',mana:'mana',name:'name',type:'type',rules:'rules',pt:'pt',collector:'footer',artist:'footer',proxy:'footer',
+    frameWhole:'frame',frameArt:'frame',frameTitle:'frame',frameType:'frame',frameRules:'frame',framePT:'frame',ptBox:'pt',fade:'frame'};
+  if(typeof setUISelection==='function')setUISelection(uiMap[id]||'card',false);
+  if(openSection && $('#advancedDrawer')?.classList.contains('open'))openFreeformSection(layer.section);
+  scheduleRender();
+}
+function updateFreeformInspector(){
+  const layer=ffLayer(state.freeform.selected);
+  const name=$('#ffSelectionName'),lock=$('#ffSelectedLocked'),x=$('#ffSelectedX'),y=$('#ffSelectedY');
+  const fontSize=$('#ffSelectedFontSize'),fontSizeLabel=$('#ffFontSizeLabel');
+  const w=$('#ffSelectedW'),h=$('#ffSelectedH'),wLabel=$('#ffWidthLabel'),hLabel=$('#ffHeightLabel'),sizeHint=$('#ffSizeHint');
+
+  if(!layer){if(name)name.textContent='Nothing selected';return}
+
+  if(name)name.textContent=layer.name;
+  if(lock)lock.checked=!!layer.locked;
+  if(x)x.value=layer.x;
+  if(y)y.value=layer.y;
+
+  const canFontSize=Number.isFinite(Number(layer.fontSize));
+  if(fontSize){
+    fontSize.value=canFontSize?Number(layer.fontSize):3;
+    fontSize.disabled=!canFontSize;
+  }
+  fontSizeLabel?.classList.toggle('ff-size-disabled',!canFontSize);
+
+  const canResize=layer.id==='rules';
+  if(w){w.value=canResize?(Number(layer.w)||89.5):89.5;w.disabled=!canResize}
+  if(h){h.value=canResize?(Number(layer.h)||22):22;h.disabled=!canResize}
+  wLabel?.classList.toggle('ff-size-disabled',!canResize);
+  hLabel?.classList.toggle('ff-size-disabled',!canResize);
+
+  if(sizeHint){
+    if(canResize) sizeHint.textContent='Rules Text: font size, box width, and box height are independent. Width changes wrapping; long text auto-shrinks only if needed to fit the selected height.';
+    else if(canFontSize) sizeHint.textContent='Font size is independent for this layer. Select another text layer to give it a different size.';
+    else sizeHint.textContent='This layer has no font-size setting. Select Mana, Name, Type, Rules, Footer, Proxy, or P/T to resize its text.';
+  }
+  showOutputs();
+}
+function openFreeformSection(sectionNo){
+  if(v('cardStyle')!=='freeform')return;
+  $$('.controls>section').forEach(sec=>{
+    if(sec.id==='freeformInspector')return;
+    const h=sec.querySelector('h2');
+    const num=h?parseInt(h.textContent):NaN;
+    sec.classList.toggle('ff-open',num===sectionNo);
+  });
+}
+function setupFreeformSectionHeaders(){
+  $$('.controls>section').forEach(sec=>{
+    if(sec.id==='freeformInspector')return;
+    const h=sec.querySelector('h2');if(!h)return;
+    h.addEventListener('click',()=>{
+      if(v('cardStyle')!=='freeform')return;
+      const was=sec.classList.contains('ff-open');
+      $$('.controls>section').forEach(s=>s.classList.remove('ff-open'));
+      if(!was)sec.classList.add('ff-open');
+    });
+  });
+}
+function renderLayersPanel(){
+  const list=$('#layersList');if(!list)return;
+  list.innerHTML='';
+  [...state.freeform.layers].reverse().forEach(layer=>{
+    const row=document.createElement('div');
+    row.className='layer-row'+(layer.id===state.freeform.selected?' selected':'')+(layer.locked?' locked':'');
+    row.draggable=true;row.dataset.id=layer.id;
+
+    const eye=document.createElement('button');eye.type='button';eye.title='Toggle visibility';eye.textContent=layer.visible?'👁':'○';
+    eye.addEventListener('click',e=>{e.stopPropagation();layer.visible=!layer.visible;renderLayersPanel();scheduleRender()});
+
+    const lock=document.createElement('button');lock.type='button';lock.title='Lock / unlock';lock.textContent=layer.locked?'🔒':'🔓';
+    lock.addEventListener('click',e=>{e.stopPropagation();layer.locked=!layer.locked;updateFreeformInspector();renderLayersPanel();updateGridControls();scheduleRender()});
+
+    const nm=document.createElement('div');nm.className='layer-name';nm.textContent=layer.name;nm.title=layer.name;
+    nm.addEventListener('click',()=>ffSelect(layer.id));
+
+    const up=document.createElement('button');up.type='button';up.title='Move layer up';up.textContent='↑';
+    up.addEventListener('click',e=>{e.stopPropagation();moveFreeformLayer(layer.id,1)});
+    const down=document.createElement('button');down.type='button';down.title='Move layer down';down.textContent='↓';
+    down.addEventListener('click',e=>{e.stopPropagation();moveFreeformLayer(layer.id,-1)});
+
+    row.append(eye,lock,nm,up,down);
+    row.addEventListener('click',()=>ffSelect(layer.id));
+    row.addEventListener('dragstart',e=>{row.classList.add('dragging');e.dataTransfer.setData('text/plain',layer.id);e.dataTransfer.effectAllowed='move'});
+    row.addEventListener('dragend',()=>{$$('.layer-row').forEach(r=>r.classList.remove('dragging','drop-target'))});
+    row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('drop-target');e.dataTransfer.dropEffect='move'});
+    row.addEventListener('dragleave',()=>row.classList.remove('drop-target'));
+    row.addEventListener('drop',e=>{
+      e.preventDefault();row.classList.remove('drop-target');
+      const from=e.dataTransfer.getData('text/plain');reorderFreeformLayer(from,layer.id);
+    });
+    list.appendChild(row);
+  });
+}
+function moveFreeformLayer(id,delta){
+  const i=ffLayerIndex(id),j=Math.max(0,Math.min(state.freeform.layers.length-1,i+delta));
+  if(i<0||i===j)return;
+  const [l]=state.freeform.layers.splice(i,1);state.freeform.layers.splice(j,0,l);
+  renderLayersPanel();scheduleRender();
+}
+function reorderFreeformLayer(fromId,targetId){
+  if(fromId===targetId)return;
+  const from=ffLayerIndex(fromId),target=ffLayerIndex(targetId);
+  if(from<0||target<0)return;
+  const [l]=state.freeform.layers.splice(from,1);
+  const newTarget=state.freeform.layers.findIndex(x=>x.id===targetId);
+  state.freeform.layers.splice(newTarget+1,0,l);
+  renderLayersPanel();scheduleRender();
+}
+function resetFreeform(){
+  state.freeform.layers=freshFreeformLayers();state.freeform.selected='name';state.freeform.showGrid=false;state.freeform.snapGrid=false;state.freeform.gridSize=2.5;updateFreeformInspector();renderLayersPanel();updateGridControls();openFreeformSection(6);scheduleRender();
+}
+function updateStandardPTControls(){
+  const on=$('#stdPTBoxEnabled')?.checked!==false;
+  const wrap=$('#stdPTBoxControls');
+  if(wrap){
+    wrap.style.opacity=on?'1':'.45';
+    wrap.querySelectorAll('input,select,button').forEach(el=>el.disabled=!on);
+  }
+}
+function updateModeSpecificControls(){
+  const style=v('cardStyle');
+  const standard=style==='standard';
+  $('#blackFadeSection')?.classList.toggle('mode-hidden',standard);
+  $('#genericPTBoxSection')?.classList.toggle('mode-hidden',standard);
+}
+function setFreeformMode(){
+  const on=v('cardStyle')==='freeform';
+  updateModeSpecificControls();
+  if(typeof renderContextProperties==='function')renderContextProperties();
+  if(typeof updateQuickUI==='function')updateQuickUI();
+  if(on){hideSelectionOverlay?.();showInspectorPane?.('layers')}
+  else {showInspectorPane?.('properties');setTimeout(()=>updateSelectionOverlay?.(),0)}
+  $('.app-shell')?.classList.toggle('freeform-shell',on);
+  $('.controls')?.classList.toggle('freeform-mode',on);
+  canvas.classList.toggle('freeform-canvas',on);
+  if(on){
+    $$('.controls>section').forEach(sec=>sec.classList.remove('ff-open'));
+    updateFreeformInspector();renderLayersPanel();
+    const selected=ffLayer(state.freeform.selected);if(selected)openFreeformSection(selected.section);
+  }else{
+    $$('.controls>section').forEach(sec=>sec.classList.remove('ff-open'));
+  }
+  scheduleRender();
+}
+function ffSnap(value){if(!state.freeform.snapGrid)return value;const step=Math.max(.25,Number(state.freeform.gridSize)||2.5);return Math.round(value/step)*step}
+function updateGridControls(){if($('#ffShowGrid'))$('#ffShowGrid').checked=!!state.freeform.showGrid;if($('#ffSnapGrid'))$('#ffSnapGrid').checked=!!state.freeform.snapGrid;if($('#ffGridSize'))$('#ffGridSize').value=state.freeform.gridSize;showOutputs()}
+
+
+function nudgeFreeformSelection(dx,dy,amount=null){
+  if(v('cardStyle')!=='freeform')return;
+  const layer=ffLayer(state.freeform.selected);
+  if(!layer||layer.locked)return;
+
+  const step=amount==null
+    ?Math.max(.01,Number($('#ffNudgeAmount')?.value)||.25)
+    :amount;
+
+  // Nudging is intentionally precise even when Snap to Grid is enabled.
+  // Mouse dragging still honors Snap to Grid.
+  layer.x=(Number(layer.x)||0)+dx*step;
+  layer.y=(Number(layer.y)||0)+dy*step;
+
+  updateFreeformInspector();
+  scheduleRender();
+}
+function freeformKeyboardNudge(e){
+  if(v('cardStyle')!=='freeform')return;
+
+  // Do not hijack arrows while the user is editing text, a select,
+  // or a range/number control.
+  const tag=(e.target?.tagName||'').toLowerCase();
+  const type=(e.target?.type||'').toLowerCase();
+  if(tag==='textarea'||tag==='select'||tag==='button'||e.target?.isContentEditable)return;
+  if(tag==='input' && !['checkbox','radio'].includes(type))return;
+
+  const dirs={
+    ArrowLeft:[-1,0],
+    ArrowRight:[1,0],
+    ArrowUp:[0,-1],
+    ArrowDown:[0,1]
+  };
+  const dir=dirs[e.key];
+  if(!dir)return;
+
+  const layer=ffLayer(state.freeform.selected);
+  if(!layer||layer.locked)return;
+
+  e.preventDefault();
+
+  // Normal = chosen nudge amount. Shift = coarse 1%. Alt = fine 0.1%.
+  let step=null;
+  if(e.shiftKey)step=1;
+  else if(e.altKey)step=.1;
+
+  nudgeFreeformSelection(dir[0],dir[1],step);
+}
+document.addEventListener('keydown',freeformKeyboardNudge);
+
+$('#ffNudgeUp')?.addEventListener('click',()=>nudgeFreeformSelection(0,-1));
+$('#ffNudgeDown')?.addEventListener('click',()=>nudgeFreeformSelection(0,1));
+$('#ffNudgeLeft')?.addEventListener('click',()=>nudgeFreeformSelection(-1,0));
+$('#ffNudgeRight')?.addEventListener('click',()=>nudgeFreeformSelection(1,0));
+
+function canvasPoint(evt){
+  const r=canvas.getBoundingClientRect();
+  return {x:(evt.clientX-r.left)*canvas.width/r.width,y:(evt.clientY-r.top)*canvas.height/r.height};
+}
+function hitFreeformLayer(x,y){
+  // Walk from top layer to bottom layer.
+  for(let i=state.freeform.layers.length-1;i>=0;i--){
+    const layer=state.freeform.layers[i];if(!layer.visible)continue;
+    const b=state.freeform.bounds.get(layer.id);if(!b)continue;
+    if(x>=b.x-8&&x<=b.x+b.w+8&&y>=b.y-8&&y<=b.y+b.h+8)return layer;
+  }
+  return null;
+}
+canvas.addEventListener('pointerdown',e=>{
+  if(v('cardStyle')!=='freeform')return;
+  const p=canvasPoint(e),layer=hitFreeformLayer(p.x,p.y);
+  if(!layer)return;
+  ffSelect(layer.id);
+  if(layer.locked){canvas.classList.add('ff-locked');return}
+  state.freeform.drag={id:layer.id,startX:p.x,startY:p.y,origX:layer.x,origY:layer.y};
+  canvas.setPointerCapture?.(e.pointerId);canvas.classList.add('ff-can-drag');
+});
+canvas.addEventListener('pointermove',e=>{
+  if(v('cardStyle')!=='freeform')return;
+  const p=canvasPoint(e);
+  if(state.freeform.drag){
+    const layer=ffLayer(state.freeform.drag.id);if(!layer||layer.locked)return;
+    layer.x=ffSnap(state.freeform.drag.origX+(p.x-state.freeform.drag.startX)/canvas.width*100);
+    layer.y=ffSnap(state.freeform.drag.origY+(p.y-state.freeform.drag.startY)/canvas.height*100);
+    updateFreeformInspector();scheduleRender();return;
+  }
+  const over=hitFreeformLayer(p.x,p.y);
+  canvas.classList.toggle('ff-can-drag',!!over&&!over.locked);
+  canvas.classList.toggle('ff-locked',!!over&&over.locked);
+});
+function endFreeformDrag(e){
+  if(state.freeform.drag){
+    state.freeform.drag=null;canvas.releasePointerCapture?.(e.pointerId);
+  }
+  canvas.classList.remove('ff-can-drag','ff-locked');
+}
+canvas.addEventListener('pointerup',endFreeformDrag);
+canvas.addEventListener('pointercancel',endFreeformDrag);
+canvas.addEventListener('pointerleave',e=>{if(!state.freeform.drag)canvas.classList.remove('ff-can-drag','ff-locked')});
+
+$('#ffSelectedLocked')?.addEventListener('change',()=>{
+  const layer=ffLayer(state.freeform.selected);if(!layer)return;layer.locked=$('#ffSelectedLocked').checked;renderLayersPanel();scheduleRender();
+});
+$('#ffSelectedX')?.addEventListener('input',()=>{
+  const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked)return;layer.x=ffSnap(+$('#ffSelectedX').value);$('#ffSelectedX').value=layer.x;scheduleRender();
+});
+$('#ffSelectedY')?.addEventListener('input',()=>{
+  const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked)return;layer.y=ffSnap(+$('#ffSelectedY').value);$('#ffSelectedY').value=layer.y;scheduleRender();
+});
+$('#ffSelectedFontSize')?.addEventListener('input',()=>{
+  const layer=ffLayer(state.freeform.selected);
+  if(!layer||layer.locked||!Number.isFinite(Number(layer.fontSize)))return;
+  layer.fontSize=+$('#ffSelectedFontSize').value;
+  scheduleRender();
+});
+$('#ffSelectedW')?.addEventListener('input',()=>{const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked||layer.id!=='rules')return;layer.w=+$('#ffSelectedW').value;scheduleRender()});
+$('#ffSelectedH')?.addEventListener('input',()=>{const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked||layer.id!=='rules')return;layer.h=+$('#ffSelectedH').value;scheduleRender()});
+$('#ffShowGrid')?.addEventListener('change',()=>{state.freeform.showGrid=$('#ffShowGrid').checked;scheduleRender()});
+$('#ffSnapGrid')?.addEventListener('change',()=>{state.freeform.snapGrid=$('#ffSnapGrid').checked});
+$('#ffGridSize')?.addEventListener('input',()=>{state.freeform.gridSize=+$('#ffGridSize').value;showOutputs();scheduleRender()});
+$('#resetFreeform')?.addEventListener('click',resetFreeform);
+$('#cardStyle')?.addEventListener('change',setFreeformMode);
+setupFreeformSectionHeaders();
+
+
+async function loadFrameGraphicFile(input,key){
+  const file=input?.files?.[0];if(!file)return;
+  state.frameGraphics[key]=await fileToImage(file);
+  scheduleRender();
+}
+[
+  ['frameWholeUpload','whole'],['frameTitleUpload','title'],['frameArtUpload','art'],
+  ['frameTypeUpload','type'],['frameRulesUpload','rules'],['framePTUpload','pt']
+].forEach(([id,key])=>$('#'+id)?.addEventListener('change',e=>loadFrameGraphicFile(e.target,key)));
+
+$('#clearFrameGraphics')?.addEventListener('click',()=>{
+  state.frameGraphics={whole:null,title:null,art:null,type:null,rules:null,pt:null};
+  ['frameWholeUpload','frameTitleUpload','frameArtUpload','frameTypeUpload','frameRulesUpload','framePTUpload']
+    .forEach(id=>{const el=$('#'+id);if(el)el.value=''});
+  scheduleRender();
+});
+
+$('#stdFramePreset')?.addEventListener('change',()=>{
+  const key=$('#stdFramePreset').value;
+  if(key==='custom'){markStandardPresetCustom();return}
+  applyStandardFramePreset(key);
+});
+
+['stdOuterColor','stdTitleBorderColor','stdArtBorderColor','stdTypeBorderColor','stdRulesBorderColor','stdPTBorderColor']
+  .forEach(id=>$('#'+id)?.addEventListener('input',markStandardPresetCustom));
+
+$('#resetStandardTextTune')?.addEventListener('click',()=>{
+  ['stdNameX','stdNameY','stdManaX','stdManaY','stdTypeX','stdTypeY','stdRulesX','stdRulesY','stdFooterX','stdFooterYOffset','stdPTX','stdPTYOffset']
+    .forEach(id=>{const el=$('#'+id);if(el)el.value=0;});
+  showOutputs();scheduleRender();
+});
+
+$('#resetStandardBorders')?.addEventListener('click',()=>{
+  const vals={stdOuterColor:'#1c1b19',stdTitleBorderColor:'#08080a',stdArtBorderColor:'#08080a',stdTypeBorderColor:'#08080a',stdRulesBorderColor:'#08080a',stdPTBorderColor:'#08080a',stdBorderWidth:.35,stdPTFillColor:'#c9c0a8',stdPTFillOpacity:100}; if($('#stdPTBoxEnabled'))$('#stdPTBoxEnabled').checked=true;
+  Object.entries(vals).forEach(([id,val])=>{const el=$('#'+id);if(el)el.value=val});
+  if($('#stdFramePreset'))$('#stdFramePreset').value='custom';
+  markStandardPresetCustom();
+  showOutputs();scheduleRender();
+});
+
+$('#cardStyle')?.addEventListener('change',()=>{setFreeformMode();updateModeSpecificControls();});
+$('#stdPTBoxEnabled')?.addEventListener('change',()=>{updateStandardPTControls();scheduleRender();});
+$('#fetchCard').onclick=loadCard;
+$('#art1').onchange=e=>loadArt(e.target,'art1');$('#art2').onchange=e=>loadArt(e.target,'art2');
+$('#exportV1').onclick=()=>downloadVersion(1);$('#exportV2').onclick=()=>downloadVersion(2);$('#exportBoth').onclick=exportBoth;
+$('#saveTemplate').onclick=saveTemplate;
+if($('#loadTemplateBtn')) $('#loadTemplateBtn').onclick=()=>{loadTemplate();showOutputs();scheduleRender();};
+if($('#resetV2')) $('#resetV2').onclick=resetV2Adjustments;
+if($('#resetCardStyle')) $('#resetCardStyle').onclick=resetCardStyleSettings;
+if($('#resetPTBox')) $('#resetPTBox').onclick=resetPTBoxSettings;
+if($('#resetSection5')) $('#resetSection5').onclick=resetSection5Settings;
+if($('#resetLayout')) $('#resetLayout').onclick=resetLayout;
+if($('#resetFonts')) $('#resetFonts').onclick=resetFontsTextStyle;
+if($('#customFont')) $('#customFont').onchange=e=>loadCustomFont(e.target);$('#resetTemplate').onclick=resetTemplate;$('#applyBaseline').onclick=applyProjectBaseline;
+$('#dataLocked').onchange=syncFieldLock;
+$$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.version=+b.dataset.version;scheduleRender()});
+$$('input,textarea,select').forEach(el=>{if(!['art1','art2','scryfallUrl'].includes(el.id))el.addEventListener('input',()=>{showOutputs();scheduleRender()})});
+
+
+['nameStroke','typeStroke','rulesStroke','footerStroke'].forEach(id=>{
+  const el=$('#'+id);
+  if(el) el.addEventListener('input',()=>syncOutlineSliders(id));
+});
+if($('#linkOutlines')){
+  $('#linkOutlines').addEventListener('change',()=>{
+    if($('#linkOutlines').checked) syncOutlineSliders('nameStroke');
+    scheduleRender();
+  });
+}
+
+try{hookV40UI();}catch(e){console.error('v40 UI hook error',e);}
+try{applyProjectBaseline();showOutputs();syncFieldLock();render();renderLayersPanel();setFreeformMode();markStandardPresetCustom();updateStandardPTControls();}catch(e){console.error('legacy startup error',e);}
+openNewCardWizard(false);
+if($('#fetchStatus') && !state.card) $('#fetchStatus').textContent='App ready — upload artwork or paste a Scryfall URL.';
+
+</script>
+</body>
+</html>
