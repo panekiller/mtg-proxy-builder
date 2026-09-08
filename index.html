@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v40.3</title>
+  <title>MTG Proxy Builder v40.4</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -1416,6 +1416,10 @@ function nonFreeformObjectAtPoint(evt){
   const style=v('cardStyle');
   const order=['pt','footer','mana','name','type','rules','artwork'];
   if(style==='standard'||style==='fullart'||style==='borderless'){
+    // Artwork covers the entire canvas in Full Art, so reserve a narrow outer
+    // perimeter as a reliable direct-selection target for the card frame.
+    const edge=.035;
+    if(nx<=edge||nx>=1-edge||ny<=edge||ny>=1-edge)return 'frame';
     for(const id of order){
       const b=uiBoundsForObject(id);if(!b)continue;
       if(nx>=b.x&&nx<=b.x+b.w&&ny>=b.y&&ny<=b.y+b.h)return id;
@@ -1720,15 +1724,19 @@ async function preloadSymbols(card){
 
 async function fileToImage(file){
   if(!file)return null;
-  const url=URL.createObjectURL(file);
-  try{
-    const img=new Image();
-    img.src=url;
-    await img.decode();
-    return img;
-  }finally{
-    URL.revokeObjectURL(url);
-  }
+  const src=await new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(reader.error||new Error('The artwork file could not be read.'));
+    reader.readAsDataURL(file);
+  });
+  const img=new Image();
+  await new Promise((resolve,reject)=>{
+    img.onload=resolve;
+    img.onerror=()=>reject(new Error('The source image cannot be decoded.'));
+    img.src=src;
+  });
+  return img;
 }
 
 async function loadArt(input,key){
@@ -2705,7 +2713,8 @@ function qc(L,rulesEnd,footerY,H){
   if(symMissing.length)msgs.push(`Waiting for symbols: ${[...new Set(symMissing)].join(', ')}`);
   if(!msgs.length){
     stateEl.textContent='PASS';stateEl.className='pill ok';
-    details.textContent=`Bottom-anchored layout: ${Math.round(gap)} px preview clearance above footer. Rules render at ${(L.rulesPct).toFixed(2)}% of card height.`;
+    const rulesPct=Number.isFinite(Number(L.rulesPct))?Number(L.rulesPct):(Number(L.rulesSize)||0)/H*100;
+    details.textContent=`Bottom-anchored layout: ${Math.round(gap)} px preview clearance above footer. Rules render at ${rulesPct.toFixed(2)}% of card height.`;
   }else{
     stateEl.textContent='CHECK';stateEl.className='pill warn';details.textContent=msgs.join(' ');
   }
@@ -2913,17 +2922,19 @@ function updateFreeformInspector(){
   if(lock)lock.checked=!!layer.locked;
   if(x)x.value=layer.x;
   if(y)y.value=layer.y;
+  if(x)x.disabled=!!layer.locked;
+  if(y)y.disabled=!!layer.locked;
 
   const canFontSize=Number.isFinite(Number(layer.fontSize));
   if(fontSize){
     fontSize.value=canFontSize?Number(layer.fontSize):3;
-    fontSize.disabled=!canFontSize;
+    fontSize.disabled=!canFontSize||!!layer.locked;
   }
   fontSizeLabel?.classList.toggle('ff-size-disabled',!canFontSize);
 
   const canResize=layer.id==='rules';
-  if(w){w.value=canResize?(Number(layer.w)||89.5):89.5;w.disabled=!canResize}
-  if(h){h.value=canResize?(Number(layer.h)||22):22;h.disabled=!canResize}
+  if(w){w.value=canResize?(Number(layer.w)||89.5):89.5;w.disabled=!canResize||!!layer.locked}
+  if(h){h.value=canResize?(Number(layer.h)||22):22;h.disabled=!canResize||!!layer.locked}
   wLabel?.classList.toggle('ff-size-disabled',!canResize);
   hLabel?.classList.toggle('ff-size-disabled',!canResize);
 
