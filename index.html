@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v43.37</title>
+  <title>MTG Proxy Builder v43.38</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -538,7 +538,7 @@ input[type="color"]{
 <main class="app-shell ui-v40-shell">
   <aside id="projectSidebar" class="project-sidebar workflow-sidebar">
     <div class="sidebar-title">
-      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.37</small></strong>
+      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.38</small></strong>
       <span>Card workflow</span>
     </div>
     <nav class="workflow-nav" aria-label="Card workflow">
@@ -1204,6 +1204,7 @@ function syncFreeformFromGlobalControl(id){
   if(freeformControlSyncing || v('cardStyle')!=='freeform')return;
   const el=$('#'+id);if(!el)return;
   const n=Number(el.value);
+  if(Number.isFinite(n)&&(FREEFORM_GLOBAL_FONT_MAP[id]||['footerY','proxyY','ptY','leftMargin','rightMargin'].includes(id)))ffHistoryCheckpoint4337();
   if(FREEFORM_GLOBAL_FONT_MAP[id] && Number.isFinite(n)){
     FREEFORM_GLOBAL_FONT_MAP[id].forEach(layerId=>{const layer=ffLayer(layerId);if(layer&&!layer.locked)layer.fontSize=n});
     updateFreeformInspector?.();
@@ -1712,7 +1713,7 @@ function makeMirroredControl(spec){
   return label;
 }
 function makeFreeformRuleBoxControl(spec){
-  const layer=ffLayer('rules');
+  let layer=ffLayer('rules');
   if(!layer)return null;
   const key=spec.axis;
   const isSize=key==='w'||key==='h';
@@ -1733,6 +1734,7 @@ function makeFreeformRuleBoxControl(spec){
   for(const input of [slider,number]){input.dataset.ffLayerId=layer.id;input.dataset.ffLayerProp=key;}
   const read=()=>Number(layer[key]);
   const refresh=()=>{
+    layer=ffLayer('rules');if(!layer)return;
     let n=read();
     if(!Number.isFinite(n))n=isSize?(key==='w'?89.5:22):0;
     number.value=String(n);
@@ -1744,10 +1746,12 @@ function makeFreeformRuleBoxControl(spec){
     number.disabled=!!layer.locked;
   };
   const apply=(raw,fromSlider=false)=>{
-    if(layer.locked)return;
+    layer=ffLayer('rules');if(!layer||layer.locked)return;
     let n=Number(raw);
     if(!Number.isFinite(n))return refresh();
     if(isSize)n=Math.max(0.01,n);
+    if(Number(layer[key])===n)return refresh();
+    ffHistoryCheckpoint4337();
     layer[key]=n;
     if(key==='x'||key==='y')syncGlobalFromFreeformLayer(layer);
     updateFreeformInspector?.();
@@ -1879,7 +1883,7 @@ function renderContextProperties(){
         const lab=document.createElement('label');lab.textContent=labelText;
         const inp=document.createElement('input');inp.type='number';inp.min=min;inp.max=max;inp.step=step;inp.value=layer[prop];inp.disabled=!!layer.locked;
         inp.dataset.ffLayerId=layer.id;inp.dataset.ffLayerProp=prop;
-        inp.addEventListener('input',()=>{const n=Number(inp.value);if(!Number.isFinite(n)||layer.locked)return;layer[prop]=n;updateFreeformInspector();scheduleRender()});
+        inp.addEventListener('input',()=>{const current=ffLayer(layer.id),n=Number(inp.value);if(!current||!Number.isFinite(n)||current.locked||Number(current[prop])===n)return;ffHistoryCheckpoint4337();current[prop]=n;updateFreeformInspector();scheduleRender()});
         lab.appendChild(inp);box.appendChild(lab);
       };
       addLayerNumber('Freeform X','x',-20,120,.1);
@@ -4159,7 +4163,7 @@ function applyBuilderState(o){if(!o)return;ffHistory4337.undo=[];ffHistory4337.r
  Promise.resolve(preloadEditableSymbols?.()).then(()=>scheduleRender()).catch(()=>{});
 }finally{restoringState=false}}
 function projectContext(){const ps=getProjects(),p=ps.find(x=>x.id===currentProjectId),c=p?.cards?.find(x=>x.id===currentProjectCardId);return {ps,p,c}}
-function updateProjectHeader(){const {p,c}=projectContext();const pn=$('#activeProjectName'),cn=$('#activeProjectCardName'),ms=$('#manualSaveState');if(pn)pn.textContent=p?.name||'No Project Selected';if(cn)cn.textContent=c?.name||($('#cardName')?.value||'No Saved Card');if(ms){ms.textContent=projectDirty?'● Unsaved changes':(c?'✓ Saved':'Not saved');ms.classList.toggle('dirty',projectDirty);ms.classList.toggle('ok',!projectDirty&&!!c)};updateProjectCardNavigation?.()}
+function updateProjectHeader(){const {p,c}=projectContext();const pn=$('#activeProjectName'),cn=$('#activeProjectCardName'),ms=$('#manualSaveState');if(pn)pn.textContent=p?.name||'No Project Selected';if(cn)cn.textContent=c?.name||($('#cardName')?.value||'No Saved Card');if(ms){ms.textContent=projectDirty?'● Unsaved changes':(c?'✓ Saved':'Not saved');ms.classList.toggle('dirty',projectDirty);ms.classList.toggle('ok',!projectDirty&&!!c)};ffHistoryButtons4337();updateProjectCardNavigation?.()}
 function updateProjectCardNavigation(){
   const prev=$('#prevProjectCard'),next=$('#nextProjectCard'),pos=$('#projectCardPosition');
   const {p}=projectContext();const cards=p?.cards||[];const i=cards.findIndex(c=>c.id===currentProjectCardId);
@@ -4882,7 +4886,7 @@ function setupFreeformSectionHeaders(){
   });
 }
 function renderLayersPanel(){
-  ffHistoryInit4337();
+  ffHistoryInit4337();ffHistoryButtons4337();
   const list=$('#layersList');if(!list)return;
   list.innerHTML='';
   [...state.freeform.layers].reverse().forEach(layer=>{
@@ -4923,6 +4927,9 @@ const ffHistory4337={undo:[],redo:[],restoring:false,limit:60,context:null};
 function ffHistoryContext4337(){return String(currentProjectId||'')+'|'+String(currentProjectCardId||'')+'|'+String($('#cardName')?.value||'')}
 function ffHistorySnapshot4337(){return JSON.stringify({layers:state.freeform.layers.map(l=>({...l})),selected:state.freeform.selected})}
 function ffHistoryButtons4337(){
+ // v43.38: Reconcile identity before showing history availability, not on click.
+ const context=ffHistoryContext4337();
+ if(ffHistory4337.context!==context){ffHistory4337.context=context;ffHistory4337.undo=[];ffHistory4337.redo=[]}
  const a=$('#ffUndo4337'),b=$('#ffRedo4337');if(a)a.disabled=!ffHistory4337.undo.length;if(b)b.disabled=!ffHistory4337.redo.length;
 }
 function ffHistoryCheckpoint4337(){
@@ -4940,7 +4947,7 @@ function ffHistoryTravel4337(direction){
  if(!from.length)return;
  const current=ffHistorySnapshot4337(),previous=from.pop();to.push(current);
  ffHistory4337.restoring=true;
- try{const snapshot=JSON.parse(previous);restoreFreeformLayout(snapshot.layers,snapshot.selected);updateFreeformInspector();renderLayersPanel();updateGridControls();scheduleRender();scheduleAutosave?.()}
+ try{const snapshot=JSON.parse(previous);restoreFreeformLayout(snapshot.layers,snapshot.selected);updateFreeformInspector();renderLayersPanel();updateGridControls();if(document.querySelector('.inspector-pane.active')?.id==='propertiesPane')renderContextProperties();scheduleRender();scheduleAutosave?.()}
  finally{ffHistory4337.restoring=false;ffHistoryButtons4337()}
 }
 function ffHistoryInit4337(){
