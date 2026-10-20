@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v43.10</title>
+  <title>MTG Proxy Builder v43.32</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -292,7 +292,10 @@ input[type="color"]{
 .mini-status{font-size:10px;color:var(--muted);line-height:1.35;margin-top:7px}
 .workspace{padding:12px;min-width:0}
 .canvas-stage{height:calc(100vh - 175px);min-height:540px;padding:14px}
-.canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center;max-height:100%;max-width:100%;height:100%;width:100%}
+.guide-ruler{position:absolute;z-index:8;background:#17212b;border:1px solid #455668;touch-action:none;user-select:none;display:none}
+.guide-top{height:24px;cursor:ns-resize}
+.guide-left{width:46px;cursor:ew-resize}
+.canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center;max-height:100%;max-width:100%;height:100%;width:100%;box-sizing:border-box;padding:32px 0 0 54px}
 #cardCanvas{position:relative;z-index:1}
 .selection-overlay{
   display:none;
@@ -429,10 +432,76 @@ input[type="color"]{
 #welcomeProjectNameWrap{margin:10px 0}#welcomeProjectNameWrap.hidden{display:none}#welcomeProjectName{width:100%;margin-top:5px}
 .welcome-template-title{font-size:12px;font-weight:800;margin:14px 0 7px}.welcome-templates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.welcome-template{padding:10px;text-align:left;border:1px solid #303943;border-radius:8px;background:#0b1016}.welcome-template strong,.welcome-template small{display:block}.welcome-template small{color:var(--muted);margin-top:3px}.welcome-template.selected{border-color:#58a6ff;background:#14253a;box-shadow:inset 0 0 0 1px #58a6ff}
 @media(max-width:700px){.welcome-mode-grid,.welcome-templates{grid-template-columns:1fr}}
+
+/* ---------- v43.22 previous/next project card navigation ---------- */
+.card-nav-btn{position:fixed;top:50%;transform:translateY(-50%);z-index:2500;width:54px;height:86px;border-radius:28px;border:1px solid #3b4652;background:rgba(13,17,23,.82);color:#dbe5ef;font-size:42px;line-height:1;display:none;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(0,0,0,.35);backdrop-filter:blur(5px)}
+.card-nav-btn:hover:not(:disabled){border-color:#58a6ff;background:#14253a;color:#fff}.card-nav-btn:disabled{opacity:.22;cursor:default}.card-nav-btn.prev{left:calc(220px + 18px)}.card-nav-btn.next{right:calc(360px + 18px)}
+.card-nav-position{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2400;padding:5px 10px;border:1px solid #303943;border-radius:999px;background:rgba(13,17,23,.82);color:#9da7b3;font-size:11px;display:none}
+@media(max-width:1200px){.card-nav-btn.prev{left:8px}.card-nav-btn.next{right:8px}.card-nav-btn{width:42px;height:68px;font-size:34px}}
 .app-toast{position:fixed;right:22px;bottom:22px;z-index:10000;max-width:420px;padding:13px 16px;border:1px solid #2f81f7;border-radius:9px;background:#111820;color:#fff;box-shadow:0 10px 32px rgba(0,0,0,.45);font-size:13px;font-weight:700;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}.app-toast.show{opacity:1;transform:translateY(0)}
 
 /* ---------- v43.0 project/save UI ---------- */
 .project-context-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 12px;background:#10161e;border:1px solid var(--line);border-radius:8px;margin-top:6px;font-size:12px}.project-context-bar strong{color:#fff}.save-state{color:#8bd5ff}.save-state.dirty{color:#e3b341}.save-state.ok{color:#7ee787}.project-context-bar button{padding:6px 10px}.manage-btn{padding:5px 8px!important;font-size:11px}.startup-row{display:flex;gap:6px;align-items:stretch}.startup-row>.startup-project,.startup-row>.startup-card{flex:1}.startup-manage{width:auto!important;min-width:38px;padding:6px 9px!important;font-size:16px;line-height:1}.startup-card-list .startup-row{margin-top:6px}.picker-backdrop{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:24px}.picker-backdrop.open{display:flex}.picker-dialog{width:min(560px,95vw);max-height:80vh;overflow:auto;background:#161b22;border:1px solid #39424e;border-radius:12px;padding:18px;box-shadow:0 24px 80px #000}.picker-dialog h3{margin:0 0 6px}.picker-dialog p{color:var(--muted);font-size:12px}.picker-list{display:grid;gap:8px;margin:14px 0}.picker-item{width:100%;text-align:left;padding:12px;border:1px solid #30363d;background:#0d1117;border-radius:8px}.picker-item:hover,.picker-item:focus{border-color:#58a6ff;background:#14253a}.picker-item strong,.picker-item small{display:block}.picker-item small{color:var(--muted);margin-top:3px}.picker-actions{display:flex;justify-content:flex-end;gap:8px}
+
+/* ---------- v43.23 navigation + header UI cleanup ---------- */
+.ui-v40-topbar{
+  height:64px;min-height:64px;padding:5px 12px;gap:10px;align-items:center;
+}
+.ui-v40-topbar .brand-block{flex:1;min-width:0;display:grid;grid-template-rows:auto auto;gap:2px}
+.ui-v40-topbar .brand-block h1{display:none}
+.ui-v40-topbar .brand-block>p{font-size:9px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;color:#8fa0b1}
+.ui-v40-topbar .project-context-bar{
+  margin:0;padding:4px 7px;gap:6px;min-height:34px;flex-wrap:nowrap;overflow:hidden;
+  font-size:10px;border-radius:6px;background:#0e141b;
+}
+.ui-v40-topbar .project-context-bar>span{white-space:nowrap}
+.ui-v40-topbar .project-context-bar #topAutosaveStatus{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ui-v40-topbar .project-context-bar button{padding:5px 7px;font-size:10px;white-space:nowrap}
+.ui-v40-topbar .project-context-bar .manage-btn{padding:5px 6px!important;font-size:9.5px}
+.ui-v40-topbar .ui-main-actions{flex:0 0 auto;flex-wrap:nowrap;align-self:center;gap:5px}
+.ui-v40-topbar .ui-main-actions button{padding:6px 9px;font-size:10px;white-space:nowrap}
+.ui-v40-shell{min-height:calc(100vh - 64px)}
+.project-sidebar,.ui-inspector-panel{height:calc(100vh - 64px);top:64px}
+
+/* Keep navigation inside the center workspace, clear of both sidebars. */
+.card-nav-btn{
+  top:calc(64px + (100vh - 64px)/2);width:44px;height:68px;border-radius:23px;
+  font-size:34px;opacity:.62;background:rgba(13,17,23,.72);transition:opacity .15s ease,border-color .15s ease,background .15s ease;
+}
+.card-nav-btn:hover:not(:disabled){opacity:1}
+.card-nav-btn.prev{left:calc(220px + 26px)}
+.card-nav-btn.next{right:calc(280px + 26px)}
+.card-nav-position{
+  left:calc(220px + (100vw - 220px - 280px)/2);bottom:10px;font-size:10px;padding:4px 9px;
+}
+@media(min-width:1181px){
+  .card-nav-btn.prev{left:calc(260px + 26px)}
+  .card-nav-btn.next{right:calc(320px + 26px)}
+  .card-nav-position{left:calc(260px + (100vw - 260px - 320px)/2)}
+}
+@media(max-width:1180px) and (min-width:901px){
+  .card-nav-btn.prev{left:calc(220px + 18px)}
+  .card-nav-btn.next{right:calc(280px + 18px)}
+}
+@media(max-width:900px){
+  .ui-v40-topbar{height:auto;min-height:54px}
+  .ui-v40-topbar .project-context-bar{flex-wrap:wrap;overflow:visible}
+  .project-sidebar,.ui-inspector-panel{height:auto;top:auto}
+  .card-nav-btn.prev{left:8px}.card-nav-btn.next{right:8px}
+  .card-nav-position{left:50%}
+}
+
+
+.guide-manager-row{border:1px solid #3b5166;background:#111b26;border-radius:8px;padding:9px;margin:8px 0}
+.guide-manager-head{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.guide-manager-head strong{flex:1;min-width:76px;font-size:11px}
+.guide-manager-head button{font-size:10px;padding:5px 7px}
+.guide-manager-head input[type=color]{width:29px;height:29px;padding:1px;flex-shrink:0}
+.guide-manager-position{display:flex;align-items:center;gap:8px;margin-top:9px}
+.guide-manager-position input[type=range]{flex:1;min-width:60px}
+.guide-manager-position input[type=number]{width:66px;flex-shrink:0}
+#guidesPane{padding:10px;overflow:auto}
+#guidesPane #movableGuidesSection{margin:0!important}
 </style>
 </head>
 <body>
@@ -460,6 +529,9 @@ input[type="color"]{
     <button id="quickExport" class="secondary">Export</button>
   </div>
 </header>
+<button id="prevProjectCard" class="card-nav-btn prev" type="button" aria-label="Previous card" title="Previous card">‹</button>
+<button id="nextProjectCard" class="card-nav-btn next" type="button" aria-label="Next card" title="Next card">›</button>
+<div id="projectCardPosition" class="card-nav-position" aria-live="polite"></div>
 
 
   
@@ -490,9 +562,10 @@ input[type="color"]{
           </div>
         </label>
         <div id="fetchStatus" class="status">Paste an exact Scryfall printing URL.</div><div id="autosaveStatus" class="status" style="margin-top:6px">Autosave ready.</div>
-        <label class="check"><input id="dataLocked" type="checkbox" checked /> Lock fetched Scryfall data</label>
+        <div class="inline" style="margin-top:8px"><button type="button" id="startBlankCard">Start Blank / Custom Card</button></div>
+        <label class="check"><input id="dataLocked" type="checkbox" /> Lock card data</label>
         <details>
-          <summary>Locked card data</summary>
+          <summary>Editable card data</summary>
           <div class="data-grid">
             <label>Name <input id="cardName" /></label>
             <label>Mana <input id="manaCost" /></label>
@@ -502,7 +575,7 @@ input[type="color"]{
             <label>Set / Lang / Rarity <input id="setLine" /></label>
             <label class="wide">Oracle text <textarea id="oracleText" rows="8"></textarea></label>
           </div>
-          <p class="hint">Fetched values are the source of truth. Editing is available for custom cards, but exact Scryfall cards should be left unchanged.</p>
+          <p class="hint">All card text is editable. Scryfall fetch fills these fields, but you can change any value afterward. Mana symbols typed as {W}, {2}, {T}, etc. render as symbols.</p>
         </details>
       </section>
 
@@ -742,21 +815,24 @@ input[type="color"]{
       </section>
 
       <section id="blackFadeSection">
-        <h2>5. Bottom fade</h2>
+        <h2>5. Bottom fade / artwork edge mask</h2>
+        <p class="hint"><strong>To hide the bottom of your image:</strong> choose a mask preset, then adjust the two boundaries. Below “Solid black starts” is 100% black when opacity is 100%.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px"><button type="button" class="secondary" data-fade-preset="low">Cover bottom 25%</button><button type="button" class="secondary" data-fade-preset="mid">Cover bottom 40%</button><button type="button" class="secondary" data-fade-preset="high">Cover bottom 55%</button><button type="button" class="secondary" data-fade-preset="short">Sharp transition</button></div>
 <button id="resetSection5" type="button" class="secondary section-reset">Reset Section 5</button>
         <label class="check"><input id="fadeEnabled" type="checkbox" checked /> Enable bottom fade</label>
         <div class="two-col">
           <label>Fade color <input id="fadeColor" type="color" value="#000000" /></label>
-          <label>Fade starts <input id="fadeStart" type="range" min="0" max="95" step="0.5" value="57" /><output></output></label>
-          <label>Fade ends <input id="fadeEnd" type="range" min="5" max="100" step="0.5" value="100" /><output></output></label>
+          <label>Blend starts (artwork remains visible above) <input id="fadeStart" type="range" min="0" max="95" step="0.5" value="57" /><output></output></label>
+          <label>Solid black starts (fully opaque if opacity is 100%) <input id="fadeEnd" type="range" min="5" max="100" step="0.5" value="100" /><output></output></label>
           <label>Fade height <input id="fadeHeight" type="range" min="5" max="100" step="0.5" value="43" /><output></output></label>
           <label>Top edge opacity <input id="fadeTopOpacity" type="range" min="0" max="100" step="1" value="0" /><output></output></label>
           <label>Top edge feather <input id="fadeTopFeather" type="range" min="0" max="80" step="1" value="28" /><output></output></label>
           <label>Top edge softness <input id="fadeTopSoftness" type="range" min="0.25" max="4" step="0.05" value="1.35" /><output></output></label>
-          <label>Bottom opacity <input id="fadeStrength" type="range" min="0" max="100" step="1" value="88" /><output></output></label>
+          <label>Solid area opacity <input id="fadeStrength" type="range" min="0" max="100" step="1" value="100" /><output></output></label>
           <label>Softness / curve <input id="fadeCurve" type="range" min="0.2" max="4" step="0.05" value="0.88" /><output></output></label>
           <label>Edge fade <input id="fadeEdge" type="range" min="0" max="100" step="1" value="0" /><output></output></label>
         </div>
+        <p class="hint">Everything below “Solid colour begins” is a uniform colour. The region between Blend starts and Solid colour begins gradually hides the image.</p>
         <button id="resetBottomFade" type="button" class="secondary section-reset">Reset Bottom Fade</button>
       </section>
 
@@ -858,6 +934,8 @@ input[type="color"]{
       
 <div class="canvas-stage" id="canvasStage">
   <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="guideTopRuler" class="guide-ruler guide-top" aria-label="Drag down to create a horizontal guide"></canvas>
+    <canvas id="guideLeftRuler" class="guide-ruler guide-left" aria-label="Drag right to create a vertical guide"></canvas>
     <canvas id="cardCanvas" width="1500" height="2100"></canvas>
     <div id="selectionOverlay" class="selection-overlay" aria-hidden="true"></div>
   </div>
@@ -874,6 +952,7 @@ input[type="color"]{
   <div class="inspector-tabs">
     <button id="propertiesTabBtn" class="inspector-tab active" type="button">Properties</button>
     <button id="layersTabBtn" class="inspector-tab" type="button">Layers</button>
+    <button id="guidesTabBtn" class="inspector-tab" type="button">Guides</button>
   </div>
 
   <div id="propertiesPane" class="inspector-pane active">
@@ -884,6 +963,22 @@ input[type="color"]{
       </div>
     </div>
     <div id="contextProperties" class="context-properties"></div>
+  </div>
+
+  <div id="guidesPane" class="inspector-pane">
+        <section id="movableGuidesSection" style="border:1px solid #35516a;border-radius:9px;padding:10px;margin:10px 0">
+<h3>Guide Manager</h3>
+<p class="hint">Select and position guides below. Drag guides on the card when editing mode is on.</p>
+<label class="check"><input id="mgShow" type="checkbox" checked /> Show guides</label>
+<label class="check"><input id="mgSnap" type="checkbox" checked /> Snap layers to guides</label>
+<label class="check"><input id="mgLock" type="checkbox" /> Lock guides</label>
+<label class="check"><input id="mgEdit" type="checkbox" /> Guide editing mode (drag guides on card; add from outside rulers)</label>
+<div class="two-col"><label>Orientation <select id="mgAxis"><option value="y">Horizontal</option><option value="x">Vertical</option></select></label><label>Position (%) <input id="mgPosition" type="number" value="50" min="0" max="100" step="0.1" /></label></div>
+<button id="mgAdd" type="button" class="secondary">Add guide</button><button id="mgClear" type="button" class="secondary">Remove all guides</button>
+<div class="two-col"><label>Guide thickness <input id="mgThickness" type="range" min="1" max="6" step="1" value="3" /></label><label>Line style <select id="mgLineStyle"><option value="solid">Solid</option><option value="dashed">Dashed</option></select></label></div>
+<div id="mgList" style="margin-top:10px;max-height:46vh;overflow:auto"></div>
+<small>In guide editing mode, drag a line to move it or click empty card space to add a guide of the chosen orientation. Rulers sit outside the card. Drag from the rulers to add guides; guides and rulers never appear in PNG exports.</small>
+</section>
   </div>
 
   <div id="layersPane" class="inspector-pane">
@@ -897,6 +992,7 @@ input[type="color"]{
       </div>
       <div class="property-group" style="margin:8px 0 10px;padding:10px">
         <div class="property-group-title">Editing Locks</div>
+        <label class="check"><input id="restrictActiveTab" type="checkbox" checked /> Restrict Selection to Active Tab</label>
         <label class="check"><input id="editHideText" type="checkbox" /> Hide text temporarily</label>
         <label class="check"><input id="editLockText" type="checkbox" /> Lock text selection</label>
         <label class="check"><input id="editLockFrames" type="checkbox" /> Lock frame selection</label>
@@ -905,6 +1001,7 @@ input[type="color"]{
       <div id="layersList" class="layers-list"></div>
       <div class="grid-controls">
         <div class="grid-controls-title">Grid</div>
+
         <label class="check"><input id="ffShowGrid" type="checkbox" /> Show grid</label>
         <label class="check"><input id="ffSnapGrid" type="checkbox" /> Snap to grid</label>
         <label>Grid spacing
@@ -1033,7 +1130,7 @@ const PREVIEW_W=1500, PREVIEW_H=2100, EXPORT_W=3000, EXPORT_H=4200;
 canvas.width=PREVIEW_W; canvas.height=PREVIEW_H;
 
 const state={version:1,card:null,setInfo:null,art1:null,art2:null,symbols:new Map(),renderTimer:null,uiSelected:'card',uiCardType:'legendary-creature',separatorImage:null,renderingExport:false,editing:{hideText:false,lockTextSelection:false,lockFrames:false,lockArtwork:false},frameGraphics:{whole:null,title:null,art:null,type:null,rules:null,pt:null},frameTransforms:{whole:{x:0,y:0,w:100,h:100},title:{x:0,y:0,w:100,h:100},art:{x:0,y:0,w:100,h:100},type:{x:0,y:0,w:100,h:100},rules:{x:0,y:0,w:100,h:100},pt:{x:0,y:0,w:100,h:100}},
-  freeform:{selected:'name',drag:null,bounds:new Map(),layers:[],showGrid:false,snapGrid:false,gridSize:2.5}
+  freeform:{selected:'name',drag:null,bounds:new Map(),layers:[],showGrid:false,snapGrid:false,gridSize:2.5,guides:[],showMovableGuides:true,snapMovableGuides:true,lockMovableGuides:false,guideThickness:3,guideLineStyle:'solid'}
 };
 
 
@@ -1058,6 +1155,32 @@ const FREEFORM_LAYER_DEFS=[
 ];
 function freshFreeformLayers(){
   return FREEFORM_LAYER_DEFS.map(x=>({...x}));
+}
+// v43.32: Compatibility adapter for saved layouts created before new layers existed.
+// Work only on runtime copies. Preserve known and unknown saved layers, their order,
+// coordinates, locks and visibility; do not rewrite saved templates on load.
+function compatibleFreeformLayers(saved){
+  if(!Array.isArray(saved))return freshFreeformLayers();
+  const definitions=new Map(FREEFORM_LAYER_DEFS.map(d=>[d.id,d]));
+  const seen=new Set();const layers=[];
+  for(const raw of saved){
+    if(!raw||typeof raw!=='object'||typeof raw.id!=='string'||seen.has(raw.id))continue;
+    seen.add(raw.id);
+    const def=definitions.get(raw.id);
+    const layer=def?{...def,...raw}:{...raw};
+    for(const key of ['x','y','w','h','fontSize']){
+      if(key in layer&&!Number.isFinite(Number(layer[key])))layer[key]=def?.[key]??0;
+    }
+    layers.push(layer);
+  }
+  for(const def of FREEFORM_LAYER_DEFS){if(!seen.has(def.id))layers.push({...def});}
+  return layers;
+}
+function restoreFreeformLayout(saved,selected){
+  state.freeform.layers=compatibleFreeformLayers(saved);
+  state.freeform.selected=state.freeform.layers.some(l=>l.id===selected)?selected:'name';
+  state.freeform.drag=null;
+  state.freeform.bounds.clear();
 }
 state.freeform.layers=freshFreeformLayers();
 
@@ -1141,7 +1264,7 @@ const defaults={
   manaSize:3.2, manaGap:0.45,
   footerSize:1.35, ptSize:3.85,
   ptY:88, footerY:92, proxyY:95.75,
-  fadeStart:57, fadeEnd:100, fadeHeight:43, fadeTopOpacity:0, fadeTopFeather:28, fadeTopSoftness:1.35, fadeStrength:88, fadeCurve:.88, fadeEdge:0, fadeColor:'#000000',
+  fadeStart:57, fadeEnd:100, fadeHeight:43, fadeTopOpacity:0, fadeTopFeather:28, fadeTopSoftness:1.35, fadeStrength:100, fadeCurve:.88, fadeEdge:0, fadeColor:'#000000',
   textOutlinesEnabled:true,
   nameOutlineEnabled:false, typeOutlineEnabled:false, rulesOutlineEnabled:false, footerOutlineEnabled:false, ptOutlineEnabled:false,
   nameStroke:.46, typeStroke:.46, rulesStroke:.46, footerStroke:.46, ptStroke:.46,
@@ -1469,9 +1592,12 @@ const UI_PROPERTY_CONFIG={
       ]},
       {title:'Bottom fade',controls:[
         {kind:'mirror',label:'Enable bottom fade',id:'fadeEnabled'},
-        {kind:'mirror',label:'Fade starts',id:'fadeStart'},
-        {kind:'mirror',label:'Bottom darkness',id:'fadeStrength'},
-        {kind:'mirror',label:'Softness',id:'fadeCurve'}
+        {kind:'mirror',label:'Blend starts (%)',id:'fadeStart'},
+        {kind:'mirror',label:'Solid black starts (%)',id:'fadeEnd'},
+        {kind:'mirror',label:'Black opacity (%)',id:'fadeStrength'},
+        {kind:'mirror',label:'Blend softness / curve',id:'fadeCurve'},
+        {kind:'mirror',label:'Fade colour',id:'fadeColor'},
+        {kind:'mirror',label:'Top edge feather',id:'fadeTopFeather'}
       ]}
     ]
   }
@@ -1671,6 +1797,7 @@ function makeActionControl(spec){
     else if(spec.action==='loadProjectCard'){loadProjectCard();}
     else if(spec.action==='duplicateProjectCard'){duplicateProjectCard();}
     else if(spec.action==='exportCurrentProject'){exportCurrentProject();}
+    else if(spec.action==='exportProjectCards'){exportProjectCards4318(currentProjectId);}
     else if(spec.action==='importProject'){$('#singleProjectImportFile')?.click();}
     else if(spec.action==='exportBackup'){exportAllProjectsBackup();}
     else if(spec.action==='importBackup'){$('#projectBackupImportFile')?.click();}
@@ -1680,6 +1807,10 @@ function makeActionControl(spec){
     else if(spec.action==='baseline'){applyProjectBaseline();updateQuickUI();renderWorkflowProperties('project')}
     else if(spec.action==='separatorImage'){$('#separatorFile')?.click()}
     else if(spec.action==='resetSeparator'){resetSeparatorTransform();renderWorkflowProperties('design')}
+    else if(spec.action==='fadePresetLow')applyFadeMaskPreset('low');
+    else if(spec.action==='fadePresetMid')applyFadeMaskPreset('mid');
+    else if(spec.action==='fadePresetHigh')applyFadeMaskPreset('high');
+    else if(spec.action==='fadePresetShort')applyFadeMaskPreset('short');
     else if(spec.action==='exportV1'){downloadVersion(1);}
     else if(spec.action==='exportV2'){downloadVersion(2);}
     else if(spec.action==='exportBoth'){exportBoth();}
@@ -1828,8 +1959,11 @@ function renderWorkflowProperties(task){
     {kind:'mirror',label:'Mana cost',id:'manaCost'},
     {kind:'mirror',label:'Type line',id:'typeLine'},
     {kind:'mirror',label:'Oracle text',id:'oracleText'},
-    {kind:'mirror',label:'Power',id:'power'},
-    {kind:'mirror',label:'Toughness',id:'toughness'}
+    {kind:'mirror',label:'Power / Toughness',id:'pt'},
+    {kind:'mirror',label:'Collector',id:'collector'},
+    {kind:'mirror',label:'Set / Language / Rarity',id:'setLine'},
+    {kind:'mirror',label:'Artist / Credit',id:'artist'},
+    {kind:'mirror',label:'Proxy line',id:'proxyLine'}
    ]);
  }else if(task==='artwork'){
    workflowGroup(host,'Artwork Files',[
@@ -1907,9 +2041,15 @@ function renderWorkflowProperties(task){
    workflowGroup(host,'Bottom Fade',[
     {kind:'mirror',label:'Enable bottom fade',id:'fadeEnabled'},
     {kind:'mirror',label:'Fade color',id:'fadeColor'},
-    {kind:'mirror',label:'Fade starts',id:'fadeStart'},
-    {kind:'mirror',label:'Bottom darkness',id:'fadeStrength'},
-    {kind:'mirror',label:'Softness',id:'fadeCurve'}
+    {kind:'mirror',label:'Blend starts (%)',id:'fadeStart'},
+    {kind:'mirror',label:'Solid black starts (%)',id:'fadeEnd'},
+    {kind:'mirror',label:'Black opacity (%)',id:'fadeStrength'},
+    {kind:'mirror',label:'Blend softness / curve',id:'fadeCurve'},
+    {kind:'mirror',label:'Top edge feather',id:'fadeTopFeather'},
+    {kind:'action',label:'Cover bottom 25%',action:'fadePresetLow'},
+    {kind:'action',label:'Cover bottom 40%',action:'fadePresetMid'},
+    {kind:'action',label:'Cover bottom 55%',action:'fadePresetHigh'},
+    {kind:'action',label:'Sharp transition',action:'fadePresetShort'}
    ]);
  }else if(task==='text'){
    workflowChoice(host,'mana','Mana Cost','Symbols, size and spacing.');
@@ -1927,6 +2067,7 @@ function renderWorkflowProperties(task){
     {kind:'action',label:'Load Project / Card',action:'loadProjectCard'},
     {kind:'action',label:'Duplicate Current Card',action:'duplicateProjectCard'},
     {kind:'action',label:'Export Current Project',action:'exportCurrentProject'},
+    {kind:'action',label:'Export Project Cards (PNGs)',action:'exportProjectCards'},
     {kind:'action',label:'Import Project',action:'importProject'},
     {kind:'action',label:'Export All Projects Backup',action:'exportBackup'},
     {kind:'action',label:'Import Backup / Previous Version',action:'importBackup'},
@@ -2233,7 +2374,7 @@ function clearWorkspaceForNewCard(){
   ['art1','art2','frameWholeUpload','frameTitleUpload','frameArtUpload','frameTypeUpload','frameRulesUpload','framePTUpload'].forEach(id=>{const el=$('#'+id);if(el)el.value=''});
   if($('#artist'))$('#artist').value='MINEMETH';
   if($('#proxyLine'))$('#proxyLine').value='For Proxy Play';
-  if($('#dataLocked'))$('#dataLocked').checked=true;
+  if($('#dataLocked'))$('#dataLocked').checked=false;
   applyProjectBaseline();
   applySavedDefault({autosave:false});
   state.version=1;
@@ -2329,11 +2470,11 @@ function closeAdvancedDrawer(){
   $('#advancedBackdrop')?.classList.remove('open');
 }
 function showInspectorPane(which){
-  const prop=which==='properties';
-  $('#propertiesPane')?.classList.toggle('active',prop);
-  $('#layersPane')?.classList.toggle('active',!prop);
-  $('#propertiesTabBtn')?.classList.toggle('active',prop);
-  $('#layersTabBtn')?.classList.toggle('active',!prop);
+  for(const [name,pane,tab] of [['properties','propertiesPane','propertiesTabBtn'],['layers','layersPane','layersTabBtn'],['guides','guidesPane','guidesTabBtn']]){
+    $('#'+pane)?.classList.toggle('active',which===name);
+    $('#'+tab)?.classList.toggle('active',which===name);
+  }
+  if(which==='guides')refreshMovableGuidesUI();
 }
 
 
@@ -2397,14 +2538,17 @@ function hookV40UI(){
   $('#advancedBackdrop')?.addEventListener('click',closeAdvancedDrawer);
   $('#propertiesTabBtn')?.addEventListener('click',()=>showInspectorPane('properties'));
   $('#layersTabBtn')?.addEventListener('click',()=>showInspectorPane('layers'));
+  $('#guidesTabBtn')?.addEventListener('click',()=>showInspectorPane('guides'));
 
   $('#quickExport')?.addEventListener('click',()=>$('#exportBoth')?.click());
 
   $$('.workflow-step').forEach(btn=>btn.addEventListener('click',()=>setWorkflowTask(btn.dataset.task,true)));
 
   canvas.addEventListener('click',e=>{
-    if(v('cardStyle')==='freeform')return;
-    setUISelection(nonFreeformObjectAtPoint(e),true);
+    if(activeGuideDrag||state.nonFreeformDrag||v('cardStyle')==='freeform')return;
+    const hit=nonFreeformObjectAtPoint(e);
+    const allowed= !restrictActiveTab || (state.workflowTask==='artwork'&&hit==='artwork') || (state.workflowTask==='design'&&hit==='frame') || (state.workflowTask==='text'&&['name','mana','type','rules','pt','footer'].includes(hit));
+    if(allowed)setUISelection(hit,true);
   });
 
   window.addEventListener('resize',()=>{if(v('cardStyle')!=='freeform')updateSelectionOverlay()});
@@ -2470,7 +2614,7 @@ async function loadCard(){
     await preloadSymbols(card);
     status.textContent=`Locked: ${card.name} — ${card.set.toUpperCase()} #${card.collector_number}`;
     if(typeof updateQuickUI==='function')updateQuickUI();
-    $('#dataLocked').checked=true;
+    $('#dataLocked').checked=false;
     syncFieldLock();
 
     // If the user is on Card Data, rebuild the mirrored fields immediately
@@ -2498,9 +2642,7 @@ function fillFields(card,setInfo){
 }
 function syncFieldLock(){
   const locked=$('#dataLocked').checked;
-  ['cardName','manaCost','typeLine','oracleText','pt'].forEach(id=>$('#'+id).readOnly=locked);
-  // Footer display fields are deliberate proxy overrides and remain editable even when Scryfall card data is locked.
-  ['collector','setLine'].forEach(id=>{const el=$('#'+id);if(el)el.readOnly=false});
+  ['cardName','manaCost','typeLine','oracleText','pt','collector','setLine','artist','proxyLine'].forEach(id=>{const el=$('#'+id);if(el)el.readOnly=locked});
 }
 
 function tokenizeSymbols(text){return [...String(text||'').matchAll(/\{[^}]+\}|[^{}]+/g)].map(m=>m[0])}
@@ -2522,6 +2664,32 @@ async function preloadSymbols(card){
       setTimeout(()=>URL.revokeObjectURL(url),30000);
     }catch{}
   }));
+}
+
+let symbolCatalogPromise=null;
+async function ensureSymbolsFromText(text){
+  const syms=[...new Set((String(text||'').match(/\{[^}]+\}/g)||[]))];
+  const missing=syms.filter(sym=>!state.symbols.has(sym));
+  if(!missing.length)return;
+  try{
+    symbolCatalogPromise ||= fetchJSON('https://api.scryfall.com/symbology');
+    const catalog=await symbolCatalogPromise;
+    const map=new Map(catalog.data.map(x=>[x.symbol,x.svg_uri]));
+    await Promise.all(missing.map(async sym=>{
+      const uri=map.get(sym); if(!uri)return;
+      try{
+        const r=await fetch(uri,{mode:'cors'}); if(!r.ok)return;
+        const blob=await r.blob(); const url=URL.createObjectURL(blob);
+        const img=new Image(); img.src=url; await img.decode();
+        state.symbols.set(sym,img);
+        setTimeout(()=>URL.revokeObjectURL(url),30000);
+      }catch{}
+    }));
+    scheduleRender();
+  }catch{}
+}
+function preloadEditableSymbols(){
+  return ensureSymbolsFromText(`${$('#manaCost')?.value||''} ${$('#oracleText')?.value||''}`);
 }
 
 async function fileToImage(file){
@@ -2559,23 +2727,34 @@ function drawCover(c,img,W,H,filter='none'){
   c.save();c.filter=filter;c.drawImage(img,x,y,dw,dh);c.restore();
 }
 function drawFadeShape(c,W,H,startPct,endPct){
-  const start=Math.max(0,Math.min(99.5,Number(startPct)||0));
-  const end=Math.max(start+.5,Math.min(100,Number(endPct)||100));
-  const y0=H*start/100,y1=H*end/100;
-  const top=Math.max(0,Math.min(1,v('fadeTopOpacity')/100));
-  const bottom=Math.max(0,Math.min(1,v('fadeStrength')/100));
-  const curve=Math.max(.05,Number(v('fadeCurve'))||1);
-  const edge=Math.max(0,Math.min(1,v('fadeEdge')/100));
+  // Mask boundaries are percentages of the *whole card*, not the artwork.
+  // Above start: unchanged. Between: smooth transition. Below end: solid colour.
+  const start=Math.max(0,Math.min(99.5,Number(startPct) || 0));
+  const end=Math.max(start+.5,Math.min(100,Number(endPct ?? 100)));
+  const y0=H*start/100, y1=H*end/100;
+  const top=Math.max(0,Math.min(1,Number(v('fadeTopOpacity'))/100));
+  const bottom=Math.max(0,Math.min(1,Number(v('fadeStrength'))/100));
+  const curve=Math.max(.2,Number(v('fadeCurve'))||1);
+  const feather=Math.max(0,Math.min(.8,Number(v('fadeTopFeather'))/100));
+  const softness=Math.max(.25,Number(v('fadeTopSoftness'))||1);
   const rgb=hexToRgb(v('fadeColor'));
-  const g=c.createLinearGradient(0,y0,0,y1);
-  const feather=Math.max(0,Math.min(.8,v('fadeTopFeather')/100));
-  const topSoft=Math.max(.05,Number(v('fadeTopSoftness'))||1);
-  for(let i=0;i<=48;i++){const t=i/48;let featherFactor=1;if(feather>0&&t<feather){const u=Math.max(0,Math.min(1,t/feather));const smooth=u*u*(3-2*u);featherFactor=Math.pow(smooth,topSoft)}const base=Math.pow(t,curve);const a=top+(bottom-top)*base*featherFactor;g.addColorStop(t,`rgba(${rgb.r},${rgb.g},${rgb.b},${Math.max(0,Math.min(1,a))})`)}
-  c.save();c.fillStyle=g;c.fillRect(0,y0,W,Math.max(1,y1-y0));
-  if(end<100){c.fillStyle=`rgba(${rgb.r},${rgb.g},${rgb.b},${bottom})`;c.fillRect(0,y1,W,H-y1)}
-  if(edge>0){
-    const steps=28,hh=Math.max(1,H-y0)/steps;
-    for(let i=0;i<steps;i++){const t=(i+.5)/steps,base=top+(bottom-top)*Math.pow(Math.min(1,t*((100-start)/(end-start))),curve),ea=Math.max(0,Math.min(.55,base*edge*.55));const hg=c.createLinearGradient(0,0,W,0);hg.addColorStop(0,`rgba(${rgb.r},${rgb.g},${rgb.b},${ea})`);hg.addColorStop(.32,`rgba(${rgb.r},${rgb.g},${rgb.b},0)`);hg.addColorStop(.68,`rgba(${rgb.r},${rgb.g},${rgb.b},0)`);hg.addColorStop(1,`rgba(${rgb.r},${rgb.g},${rgb.b},${ea})`);c.fillStyle=hg;c.fillRect(0,y0+i*hh,W,hh+1)}
+  c.save();
+  // An opaque plateau is drawn separately so it cannot be weakened by the gradient.
+  const gradient=c.createLinearGradient(0,y0,0,y1);
+  for(let i=0;i<=64;i++){
+    const t=i/64;
+    const shaped=Math.pow(t,curve);
+    const feathered=feather>0 && t<feather
+      ? Math.pow((t/feather)**2*(3-2*t/feather),softness)
+      : 1;
+    const alpha=top+(bottom-top)*shaped*feathered;
+    gradient.addColorStop(t,`rgba(${rgb.r},${rgb.g},${rgb.b},${Math.max(0,Math.min(1,alpha))})`);
+  }
+  c.fillStyle=gradient;
+  c.fillRect(0,y0,W,y1-y0);
+  if(end<100){
+    c.fillStyle=`rgba(${rgb.r},${rgb.g},${rgb.b},${bottom})`;
+    c.fillRect(0,y1,W,H-y1);
   }
   c.restore();
 }
@@ -3598,6 +3777,7 @@ function renderTo(c,W,H,version,drawGuides=true){
   }
 
   qc(L,rulesEnd,footerY,H);
+  if(drawGuides)drawMovableGuides(c,W,H);
   state.renderingExport=false;
 }
 function qc(L,rulesEnd,footerY,H){
@@ -3617,7 +3797,105 @@ function qc(L,rulesEnd,footerY,H){
     stateEl.textContent='CHECK';stateEl.className='pill warn';details.textContent=msgs.join(' ');
   }
 }
-function render(){renderTo(ctx,PREVIEW_W,PREVIEW_H,state.version)}
+function drawMovableGuides(c,W,H){
+ const f=state.freeform;
+ if(!f.showMovableGuides||!Array.isArray(f.guides))return;
+ c.save();
+ const thick=Math.max(1,Math.min(6,Number(f.guideThickness)||3));
+ const width=thick*W/500;
+ c.setLineDash(f.guideLineStyle==='dashed'?[8*W/500,5*W/500]:[]);
+ for(const g of f.guides){
+  if(g.visible===false)continue;
+  const n=Math.max(0,Math.min(100,Number(g.value)||0));
+  const color=g.color||'#00e5ff';
+  const x=n*W/100,y=n*H/100;
+  c.beginPath();if(g.axis==='x'){c.moveTo(x,0);c.lineTo(x,H)}else{c.moveTo(0,y);c.lineTo(W,y)}
+  c.lineWidth=width+2.5*W/500;c.strokeStyle='#080d13';c.stroke();
+  c.lineWidth=width;c.strokeStyle=color;c.stroke();
+ }
+ c.restore();
+}
+function restoreMovableGuides(o){
+ const f=state.freeform;
+ f.guides=Array.isArray(o.guides)?o.guides.filter(g=>g&&(g.axis==='x'||g.axis==='y')&&Number.isFinite(Number(g.value))).map(g=>({id:g.id||Date.now()+Math.random(),axis:g.axis,value:Number(g.value),color:g.color||'#00e5ff',visible:g.visible!==false,locked:!!g.locked})):[];
+ f.showMovableGuides=o.showMovableGuides!==false;
+ f.snapMovableGuides=o.snapMovableGuides!==false;
+ f.lockMovableGuides=!!o.lockMovableGuides;
+ f.guideThickness=Math.max(1,Math.min(6,Number(o.guideThickness)||3));
+ f.guideLineStyle=o.guideLineStyle==='dashed'?'dashed':'solid';
+ refreshMovableGuidesUI();
+}
+function refreshMovableGuidesUI(){
+ const f=state.freeform;
+ requestAnimationFrame(updateWorkspaceRulers);
+ for(const [id,k] of [['mgShow','showMovableGuides'],['mgSnap','snapMovableGuides'],['mgLock','lockMovableGuides']]){const e=$('#'+id);if(e)e.checked=!!f[k]}
+ if($('#mgThickness'))$('#mgThickness').value=f.guideThickness||3;
+ if($('#mgLineStyle'))$('#mgLineStyle').value=f.guideLineStyle||'solid';
+ const list=$('#mgList');if(!list)return;list.replaceChildren();
+ (f.guides||[]).forEach((g,i)=>{
+  const row=document.createElement('div');row.className='guide-manager-row';
+  const head=document.createElement('div');head.className='guide-manager-head';
+  const swatch=document.createElement('input');swatch.type='color';swatch.value=g.color||'#00e5ff';swatch.title='Guide colour';swatch.addEventListener('input',()=>{g.color=swatch.value;scheduleRender();scheduleAutosave?.()});
+  const name=document.createElement('strong');name.textContent=(g.axis==='x'?'Vertical':'Horizontal')+' '+(i+1);
+  const eye=document.createElement('button');eye.type='button';eye.className='secondary';eye.textContent=g.visible===false?'Show':'Hide';eye.title='Toggle guide visibility';eye.addEventListener('click',()=>{g.visible=g.visible===false;refreshMovableGuidesUI();scheduleRender();scheduleAutosave?.()});
+  const lock=document.createElement('button');lock.type='button';lock.className='secondary';lock.textContent=g.locked?'Unlock':'Lock';lock.addEventListener('click',()=>{g.locked=!g.locked;refreshMovableGuidesUI();scheduleAutosave?.()});
+  const del=document.createElement('button');del.type='button';del.className='secondary';del.textContent='Delete';del.addEventListener('click',()=>{f.guides.splice(i,1);refreshMovableGuidesUI();scheduleRender();scheduleAutosave?.()});
+  head.append(swatch,name,eye,lock,del);
+  const control=document.createElement('div');control.className='guide-manager-position';
+  const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=100;slider.step=.1;slider.value=g.value;slider.disabled=!!g.locked;
+  const input=document.createElement('input');input.type='number';input.min=0;input.max=100;input.step=.1;input.value=g.value;input.disabled=!!g.locked;input.title='Position in percent';
+  const change=value=>{g.value=Math.max(0,Math.min(100,Number(value)||0));slider.value=g.value;input.value=g.value;scheduleRender();scheduleAutosave?.()};
+  slider.addEventListener('input',()=>change(slider.value));input.addEventListener('change',()=>change(input.value));
+  control.append(slider,input);row.append(head,control);list.append(row);
+ });
+}
+function snapToMovableGuides(val,axis){if(!state.freeform.snapMovableGuides)return val;const nearest=(state.freeform.guides||[]).filter(g=>g.axis===axis).map(g=>Number(g.value)).sort((a,b)=>Math.abs(a-val)-Math.abs(b-val))[0];return Number.isFinite(nearest)&&Math.abs(nearest-val)<=1.5?nearest:val}
+// v43.28: Photoshop-like workspace rulers, physically outside the card canvas.
+function updateWorkspaceRulers(){
+ const card=$('#cardCanvas'),wrap=$('#canvasWrap'),top=$('#guideTopRuler'),left=$('#guideLeftRuler');
+ if(!card||!wrap||!top||!left)return;
+ const r=card.getBoundingClientRect(),w=wrap.getBoundingClientRect();
+ if(!r.width||!r.height)return;
+ const x=r.left-w.left,y=r.top-w.top;
+ const shown=state.freeform.showMovableGuides;
+ top.style.display=left.style.display=shown?'block':'none';
+ if(!shown)return;
+ top.style.left=x+'px';top.style.top=(y-28)+'px';top.style.width=r.width+'px';
+ left.style.left=(x-50)+'px';left.style.top=y+'px';left.style.height=r.height+'px';
+ const paint=(el,vertical)=>{
+   const dpr=window.devicePixelRatio||1;
+   const cw=vertical?46:r.width,ch=vertical?r.height:24;
+   el.width=Math.max(1,Math.round(cw*dpr));el.height=Math.max(1,Math.round(ch*dpr));
+   const c=el.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+   c.clearRect(0,0,cw,ch);c.strokeStyle='#b7c9d8';c.fillStyle='#e1edf7';c.font='10px sans-serif';
+   for(let i=0;i<=100;i+=5){const n=i/100*(vertical?ch:cw);const major=i%10===0;
+     c.beginPath();if(vertical){c.moveTo(46-(major?12:6),n);c.lineTo(46,n)}else{c.moveTo(n,24-(major?12:6));c.lineTo(n,24)}c.stroke();
+     if(major){if(vertical){c.textAlign='right';c.textBaseline='middle';c.fillText(String(i),31,Math.max(7,Math.min(ch-7,n)));}else{c.textAlign='left';c.textBaseline='alphabetic';c.fillText(String(i),Math.max(2,Math.min(cw-(i===100?21:16),n+2)),9);}}
+   }
+ };
+ paint(top,false);paint(left,true);
+}
+(function setupExternalRulers(){
+ const top=$('#guideTopRuler'),left=$('#guideLeftRuler'),card=$('#cardCanvas');
+ if(!top||!left||!card)return;
+ for(const [el,axis] of [[top,'y'],[left,'x']]){
+  el.addEventListener('pointerdown',e=>{
+   if(state.freeform.lockMovableGuides)return;
+   e.preventDefault();const r=card.getBoundingClientRect();
+   const pos=axis==='y'?e.clientY:e.clientX;
+   const base=axis==='y'?r.top:r.left,span=axis==='y'?r.height:r.width;
+   const g={id:Date.now()+Math.random(),axis,value:Math.max(0,Math.min(100,(pos-base)/span*100)),color:'#00e5ff',visible:true,locked:false};
+   state.freeform.guides.push(g);el.setPointerCapture(e.pointerId);
+   const move=ev=>{const rr=card.getBoundingClientRect();g.value=Math.round(Math.max(0,Math.min(100,((axis==='y'?ev.clientY-rr.top:ev.clientX-rr.left)/(axis==='y'?rr.height:rr.width))*100))*10)/10;scheduleRender()};
+   const done=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',done);el.removeEventListener('pointercancel',done);refreshMovableGuidesUI();scheduleAutosave?.();scheduleRender()};
+   el.addEventListener('pointermove',move);el.addEventListener('pointerup',done);el.addEventListener('pointercancel',done);
+  });
+ }
+ window.addEventListener('resize',updateWorkspaceRulers);
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(updateWorkspaceRulers).observe(card);
+ requestAnimationFrame(updateWorkspaceRulers);
+})();
+function render(){renderTo(ctx,PREVIEW_W,PREVIEW_H,state.version);updateWorkspaceRulers()}
 function scheduleRender(){clearTimeout(state.renderTimer);state.renderTimer=setTimeout(render,40)}
 
 function blobForVersion(version){
@@ -3630,7 +3908,7 @@ function blobForVersion(version){
 async function downloadVersion(version){
   const blob=await blobForVersion(version);if(!blob)return;
   const a=document.createElement('a'),safe=($('#cardName').value||'card').replace(/[^a-z0-9]+/gi,'_');
-  a.download=`${safe}_V${version}.png`;a.href=URL.createObjectURL(blob);a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  a.download=version===1?`${safe}.png`:`${safe}_V2.png`;a.href=URL.createObjectURL(blob);a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
 }
 async function exportBoth(){
   await downloadVersion(1);
@@ -3671,7 +3949,23 @@ async function chooseDiskProjectFolder(){
     await writeDiskIndex();return h;
   }catch(e){if(e?.name!=='AbortError'){console.error(e);setAutosaveStatus('⚠ Could not connect project folder')}return null}
 }
-async function ensureDiskFolder(){return diskProjectRootHandle||await restoreRememberedDiskFolder()}
+async function ensureDiskFolder(requestAccess=true){
+  if(diskProjectRootHandle)return diskProjectRootHandle;
+  const restored=await restoreRememberedDiskFolder();if(restored)return restored;
+  if(!diskApiAvailable())return null;
+  const h=await recallDiskHandle();if(!h)return null;
+  try{
+    let perm=await h.queryPermission?.({mode:'readwrite'});
+    if(perm!=='granted'&&requestAccess)perm=await h.requestPermission?.({mode:'readwrite'});
+    if(perm==='granted'){
+      diskProjectRootHandle=h;setDiskFolderStatus('Connected: '+h.name);await rememberDiskHandle(h);
+      return h;
+    }
+    setDiskFolderStatus('Reconnect project folder: '+h.name);
+    setAutosaveStatus('⚠ Reconnect Project Folder to restore artwork');
+  }catch(e){console.warn('Folder reconnect failed',e)}
+  return null;
+}
 async function getDir(parent,name,create=true){return parent.getDirectoryHandle(name,{create})}
 async function writeFileHandle(dir,name,data){
   const fh=await dir.getFileHandle(name,{create:true}),w=await fh.createWritable();await w.write(data);await w.close();return fh;
@@ -3683,7 +3977,7 @@ async function loadImageFromFile(file){const url=URL.createObjectURL(file),img=n
 function releaseDiskImage(img){if(img?._diskObjectUrl)try{URL.revokeObjectURL(img._diskObjectUrl)}catch{}}
 async function writeDiskIndex(){
   if(!diskProjectRootHandle)return;const ps=getProjects();
-  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.15',updatedAt:new Date().toISOString(),projects:ps.map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
+  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.22',updatedAt:new Date().toISOString(),projects:ps.map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
 }
 async function diskProjectDirs(project,card,create=true){
   const projects=await getDir(diskProjectRootHandle,'Projects',create),pd=await getDir(projects,'project_'+project.id,create),cards=await getDir(pd,'Cards',create),cd=card?await getDir(cards,'card_'+card.id,create):null;return {projects,pd,cards,cd};
@@ -3701,22 +3995,31 @@ async function saveCardToDisk(project,card){
     const sep=await saveImageAsset(cd,'separator.png',state.separatorImage);if(sep)assets.separator=sep;
     for(const k of ['whole','title','art','type','rules','pt']){const fn=await saveImageAsset(cd,'frame-'+k+'.png',state.frameGraphics?.[k]);if(fn)assets.frames[k]=fn}
     const data=captureBuilderState();
-    await writeJson(cd,'card.json',{format:'MTGProxyBuilderCard',schema:DISK_SCHEMA,builderVersion:'43.15',projectId:project.id,projectName:project.name,id:card.id,name:card.name,createdAt:card.createdAt,updatedAt:card.updatedAt,data,assets});
+    await writeJson(cd,'card.json',{format:'MTGProxyBuilderCard',schema:DISK_SCHEMA,builderVersion:'43.22',projectId:project.id,projectName:project.name,id:card.id,name:card.name,createdAt:card.createdAt,updatedAt:card.updatedAt,data,assets});
+    const verifyCard=await tryFile(cd,'card.json');if(!verifyCard)throw new Error('card.json verification failed');
+    if(state.art1&&!await tryFile(cd,assets.art1||'artwork-v1.png'))throw new Error('V1 artwork verification failed');
+    if(state.art2&&!await tryFile(cd,assets.art2||'artwork-v2.png'))throw new Error('V2 artwork verification failed');
     await writeDiskIndex();return true;
   }catch(e){console.error('Disk card save failed',e);setAutosaveStatus('⚠ Browser save worked, but disk card save failed');return false}
 }
 async function tryFile(dir,name){try{return await (await dir.getFileHandle(name)).getFile()}catch{return null}}
 async function restoreDiskAssets(cd,assets={}){
   for(const old of [state.art1,state.art2,state.separatorImage,...Object.values(state.frameGraphics||{})])releaseDiskImage(old);
-  const load=async name=>{if(!name)return null;const f=await tryFile(cd,name);return f?await loadImageFromFile(f):null};
-  state.art1=await load(assets.art1);state.art2=await load(assets.art2);state.separatorImage=await load(assets.separator);
-  state.frameGraphics=state.frameGraphics||{};for(const k of ['whole','title','art','type','rules','pt'])state.frameGraphics[k]=await load(assets.frames?.[k]);
+  const load=async(name,fallback)=>{const fn=name||fallback;if(!fn)return null;const f=await tryFile(cd,fn);return f?await loadImageFromFile(f):null};
+  // Fallback filenames repair older card.json files whose asset references were lost.
+  state.art1=await load(assets.art1,'artwork-v1.png');
+  state.art2=await load(assets.art2,'artwork-v2.png');
+  state.separatorImage=await load(assets.separator,'separator.png');
+  state.frameGraphics=state.frameGraphics||{};
+  for(const k of ['whole','title','art','type','rules','pt'])state.frameGraphics[k]=await load(assets.frames?.[k],'frame-'+k+'.png');
+  const restored=[];if(state.art1)restored.push('V1 artwork');if(state.art2)restored.push('V2 artwork');
+  return restored;
 }
 async function loadDiskCard(projectId,cardId){
   if(!diskProjectRootHandle)return false;try{
     const ps=getProjects(),p=ps.find(x=>x.id===projectId);if(!p)return false;const c=p.cards?.find(x=>x.id===cardId);if(!c)return false;
     const {cd}=await diskProjectDirs(p,c,false),f=await tryFile(cd,'card.json');if(!f)return false;const rec=JSON.parse(await f.text());
-    currentProjectId=p.id;currentProjectCardId=c.id;applyBuilderState(rec.data);await restoreDiskAssets(cd,rec.assets);projectDirty=false;updateProjectHeader();updateQuickUI?.();scheduleRender();setAutosaveStatus(`✓ Loaded from disk: ${p.name} → ${c.name}`);return true;
+    currentProjectId=p.id;currentProjectCardId=c.id;applyBuilderState(rec.data);await preloadEditableSymbols();const restored=await restoreDiskAssets(cd,rec.assets);projectDirty=false;updateProjectHeader();updateQuickUI?.();scheduleRender();setAutosaveStatus(restored.length?`✓ ${restored.join(' + ')} restored from disk — ${p.name} → ${c.name}`:`⚠ Card loaded from disk, but no artwork file was found — ${p.name} → ${c.name}`);return true;
   }catch(e){console.error('Disk card load failed',e);setAutosaveStatus('⚠ Could not load complete card from disk');return false}
 }
 async function loadProjectsFromDiskFolder(){
@@ -3757,17 +4060,42 @@ function persistProjectRecord(project){
 }
 function captureBuilderState(){
  const controls={};document.querySelectorAll('input,textarea,select').forEach(el=>{if(!el.id||el.type==='file')return;controls[el.id]=el.type==='checkbox'?el.checked:el.value});
- return {version:4313,savedAt:new Date().toISOString(),controls,card:state.card,setInfo:state.setInfo,frameTransforms:JSON.parse(JSON.stringify(state.frameTransforms)),freeform:{selected:state.freeform.selected,layers:state.freeform.layers.map(x=>({...x})),showGrid:state.freeform.showGrid,snapGrid:state.freeform.snapGrid,gridSize:state.freeform.gridSize},editing:{...state.editing}};
+ return {version:4322,savedAt:new Date().toISOString(),controls,card:state.card,setInfo:state.setInfo,frameTransforms:JSON.parse(JSON.stringify(state.frameTransforms)),freeform:{selected:state.freeform.selected,layers:state.freeform.layers.map(x=>({...x})),showGrid:state.freeform.showGrid,snapGrid:state.freeform.snapGrid,gridSize:state.freeform.gridSize,guides:(state.freeform.guides||[]).map(g=>({...g})),showMovableGuides:state.freeform.showMovableGuides,snapMovableGuides:state.freeform.snapMovableGuides,lockMovableGuides:state.freeform.lockMovableGuides,guideThickness:state.freeform.guideThickness,guideLineStyle:state.freeform.guideLineStyle},editing:{...state.editing}};
 }
 function applyBuilderState(o){if(!o)return;restoringState=true;try{
  Object.entries(o.controls||{}).forEach(([id,val])=>{const el=$('#'+id);if(!el||el.type==='file')return;if(el.type==='checkbox')el.checked=!!val;else el.value=val});
  state.card=o.card||state.card;state.setInfo=o.setInfo||state.setInfo;if(o.frameTransforms)state.frameTransforms=JSON.parse(JSON.stringify(o.frameTransforms));
- if(o.freeform){if(Array.isArray(o.freeform.layers))state.freeform.layers=o.freeform.layers.map(x=>({...x}));state.freeform.selected=o.freeform.selected||state.freeform.selected;state.freeform.showGrid=!!o.freeform.showGrid;state.freeform.snapGrid=!!o.freeform.snapGrid;state.freeform.gridSize=Number(o.freeform.gridSize)||2.5}
+ if(o.freeform){if(Array.isArray(o.freeform.layers))restoreFreeformLayout(o.freeform.layers,o.freeform.selected||state.freeform.selected);state.freeform.showGrid=!!o.freeform.showGrid;state.freeform.snapGrid=!!o.freeform.snapGrid;state.freeform.gridSize=Number(o.freeform.gridSize)||2.5;restoreMovableGuides(o.freeform)}
  if(o.editing)state.editing={...state.editing,...o.editing};
  updateModeSpecificControls?.();updateStandardPTControls?.();setFreeformMode?.();updateGridControls?.();renderLayersPanel?.();updateQuickUI?.();renderContextProperties?.();showOutputs();syncFieldLock?.();scheduleRender();
+ // Saved/custom cards must restore graphical mana symbols without requiring a Scryfall refetch.
+ Promise.resolve(preloadEditableSymbols?.()).then(()=>scheduleRender()).catch(()=>{});
 }finally{restoringState=false}}
 function projectContext(){const ps=getProjects(),p=ps.find(x=>x.id===currentProjectId),c=p?.cards?.find(x=>x.id===currentProjectCardId);return {ps,p,c}}
-function updateProjectHeader(){const {p,c}=projectContext();const pn=$('#activeProjectName'),cn=$('#activeProjectCardName'),ms=$('#manualSaveState');if(pn)pn.textContent=p?.name||'No Project Selected';if(cn)cn.textContent=c?.name||($('#cardName')?.value||'No Saved Card');if(ms){ms.textContent=projectDirty?'● Unsaved changes':(c?'✓ Saved':'Not saved');ms.classList.toggle('dirty',projectDirty);ms.classList.toggle('ok',!projectDirty&&!!c)}}
+function updateProjectHeader(){const {p,c}=projectContext();const pn=$('#activeProjectName'),cn=$('#activeProjectCardName'),ms=$('#manualSaveState');if(pn)pn.textContent=p?.name||'No Project Selected';if(cn)cn.textContent=c?.name||($('#cardName')?.value||'No Saved Card');if(ms){ms.textContent=projectDirty?'● Unsaved changes':(c?'✓ Saved':'Not saved');ms.classList.toggle('dirty',projectDirty);ms.classList.toggle('ok',!projectDirty&&!!c)};updateProjectCardNavigation?.()}
+function updateProjectCardNavigation(){
+  const prev=$('#prevProjectCard'),next=$('#nextProjectCard'),pos=$('#projectCardPosition');
+  const {p}=projectContext();const cards=p?.cards||[];const i=cards.findIndex(c=>c.id===currentProjectCardId);
+  const show=!!p&&i>=0&&cards.length>0;
+  if(prev){prev.style.display=show?'flex':'none';prev.disabled=!show||i<=0;}
+  if(next){next.style.display=show?'flex':'none';next.disabled=!show||i>=cards.length-1;}
+  if(pos){pos.style.display=show?'block':'none';pos.textContent=show?`${i+1} of ${cards.length}`:'';}
+}
+async function navigateProjectCard(direction){
+  const {p}=projectContext();if(!p)return;const cards=p.cards||[];const i=cards.findIndex(c=>c.id===currentProjectCardId);
+  const ni=i+(direction<0?-1:1);if(i<0||ni<0||ni>=cards.length)return;
+  if(projectDirty){
+    const choice=await chooseFromList('Unsaved Changes','This card has unsaved changes. What would you like to do before moving to the '+(direction<0?'previous':'next')+' card?',[
+      {value:'save',label:'Save & Continue',detail:'Save this card, then move on'},
+      {value:'discard',label:'Continue Without Saving',detail:'Discard these unsaved changes and load the other card'},
+      {value:'cancel',label:'Cancel',detail:'Stay on this card'}
+    ]);
+    if(!choice||choice==='cancel')return;
+    if(choice==='save'){await saveProjectCard(false);if(projectDirty)return;}
+  }
+  await openStartupCard(p.id,cards[ni].id);
+  updateProjectCardNavigation();
+}
 function setAutosaveStatus(t){const e=$('#autosaveStatus'),top=$('#topAutosaveStatus');if(e)e.textContent=t;if(top)top.textContent=t}
 function markProjectDirty(){if(restoringState)return;projectDirty=true;updateProjectHeader()}
 function chooseFromList(title,hint,items){return new Promise(resolve=>{const b=$('#pickerBackdrop'),list=$('#pickerList');$('#pickerTitle').textContent=title;$('#pickerHint').textContent=hint||'';list.innerHTML='';items.forEach(item=>{const btn=document.createElement('button');btn.type='button';btn.className='picker-item';btn.innerHTML=`<strong>${escapeHtml(item.label)}</strong>${item.detail?`<small>${escapeHtml(item.detail)}</small>`:''}`;btn.addEventListener('click',()=>{b.classList.remove('open');b.setAttribute('aria-hidden','true');resolve(item.value)});list.appendChild(btn)});b.classList.add('open');b.setAttribute('aria-hidden','false');const cancel=()=>{b.classList.remove('open');b.setAttribute('aria-hidden','true');resolve(null)};$('#pickerCancel').onclick=cancel;b.onclick=e=>{if(e.target===b)cancel()}})}
@@ -3796,7 +4124,7 @@ async function saveProjectCard(forceNew=false){
  if(root){const diskOk=await saveCardToDisk(p,card);if(diskOk)setAutosaveStatus(`✓ Card saved to disk: ${p.name} at ${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`)}
  else {setDiskFolderStatus('Project folder not connected — use Reconnect/Choose Project Folder');setAutosaveStatus(`✓ Card saved in browser recovery. Reconnect the project folder to save to disk.`)}
 }
-async function loadProjectCard(){const ps=getProjects();if(!ps.length){alert('No projects saved yet.');return}const pid=await chooseFromList('Choose Project','Click the project you want to open.',ps.map(p=>({value:p.id,label:p.name,detail:`${p.cards?.length||0} saved card${(p.cards?.length||0)===1?'':'s'}`})));if(!pid)return;const p=ps.find(x=>x.id===pid);currentProjectId=p.id;if(!p.cards?.length){currentProjectCardId=null;projectDirty=false;updateProjectHeader();alert('That project has no saved cards yet.');return}const cid=await chooseFromList('Choose Card',`Project: ${p.name}`,p.cards.map(c=>({value:c.id,label:c.name,detail:c.updatedAt?'Saved '+new Date(c.updatedAt).toLocaleString():''})));if(!cid)return;const card=p.cards.find(x=>x.id===cid);currentProjectCardId=card.id;if(diskProjectRootHandle&&await loadDiskCard(p.id,card.id))return;if(card.data)applyBuilderState(card.data);projectDirty=false;updateProjectHeader();setAutosaveStatus(`Loaded browser save: ${p.name} → ${card.name}`)}
+async function loadProjectCard(){const ps=getProjects();if(!ps.length){alert('No projects saved yet.');return}const pid=await chooseFromList('Choose Project','Click the project you want to open.',ps.map(p=>({value:p.id,label:p.name,detail:`${p.cards?.length||0} saved card${(p.cards?.length||0)===1?'':'s'}`})));if(!pid)return;const p=ps.find(x=>x.id===pid);currentProjectId=p.id;if(!p.cards?.length){currentProjectCardId=null;projectDirty=false;updateProjectHeader();alert('That project has no saved cards yet.');return}const cid=await chooseFromList('Choose Card',`Project: ${p.name}`,p.cards.map(c=>({value:c.id,label:c.name,detail:c.updatedAt?'Saved '+new Date(c.updatedAt).toLocaleString():''})));if(!cid)return;const card=p.cards.find(x=>x.id===cid);currentProjectCardId=card.id;const root=await ensureDiskFolder(true);if(root&&await loadDiskCard(p.id,card.id))return;if(card.data)applyBuilderState(card.data);projectDirty=false;updateProjectHeader();setAutosaveStatus(root?`⚠ Disk card unavailable; loaded browser recovery: ${p.name} → ${card.name}`:`⚠ Loaded browser recovery only. Reconnect Project Folder to restore artwork.`)}
 function renameProjectById(projectId){
  const ps=getProjects(),p=ps.find(x=>x.id===projectId);if(!p)return;
  const name=prompt('Rename project:',p.name);if(name===null)return;const clean=name.trim();if(!clean){setAutosaveStatus('⚠ Project name cannot be empty');return}
@@ -3825,7 +4153,7 @@ function duplicateProjectCard(){return saveProjectCard(true)}
 function getRecoveryAutosave(){try{const a=JSON.parse(localStorage.getItem(AUTOSAVE_KEY)||'null');return a?.data?a:null}catch{return null}}
 function resumeRecoveryAutosave(){const a=getRecoveryAutosave();if(!a)return;currentProjectId=a.projectId||null;currentProjectCardId=a.cardId||null;applyBuilderState(a.data);projectDirty=true;updateProjectHeader();setAutosaveStatus('✓ Recovered autosave from '+new Date(a.data.savedAt).toLocaleString());closeNewCardWizard()}
 function discardRecoveryAutosave(){localStorage.removeItem(AUTOSAVE_KEY);renderStartupProjects();setAutosaveStatus('Recovery autosave discarded.')}
-async function openStartupCard(projectId,cardId){const ps=getProjects(),p=ps.find(x=>x.id===projectId),card=p?.cards?.find(x=>x.id===cardId);if(!p||!card)return;if(diskProjectRootHandle&&await loadDiskCard(projectId,cardId)){closeNewCardWizard();return}currentProjectId=p.id;currentProjectCardId=card.id;if(card.data)applyBuilderState(card.data);projectDirty=false;updateProjectHeader();setAutosaveStatus(`Loaded browser save: ${p.name} → ${card.name}`);closeNewCardWizard()}
+async function openStartupCard(projectId,cardId){const ps=getProjects(),p=ps.find(x=>x.id===projectId),card=p?.cards?.find(x=>x.id===cardId);if(!p||!card)return;const root=await ensureDiskFolder(true);if(root&&await loadDiskCard(projectId,cardId)){closeNewCardWizard();updateProjectCardNavigation();return}currentProjectId=p.id;currentProjectCardId=card.id;if(card.data)applyBuilderState(card.data);await preloadEditableSymbols();projectDirty=false;updateProjectHeader();setAutosaveStatus(root?`⚠ Disk card unavailable; loaded browser recovery: ${p.name} → ${card.name}`:`⚠ Loaded browser recovery only. Reconnect Project Folder to restore artwork.`);closeNewCardWizard();updateProjectCardNavigation()}
 
 // ---------- v43.14 project batch template + Save Project As ----------
 function deepClone4314(v){return v==null?v:JSON.parse(JSON.stringify(v))}
@@ -3834,30 +4162,50 @@ function templateDesignByName4314(name){
   if(name==='__factory__')return null;
   const all=getSavedTemplates();return normalizeTemplateDesign(all[name]);
 }
-function mergeDesignIntoCardData4314(cardData,design,{includeV2=true}={}){
+function mergeDesignIntoCardData4314(cardData,design,{includeV2=true,v2Only=false}={}){
+  // Card saves are full builder snapshots: UI values live in data.controls while
+  // Freeform/frame/editing state lives beside controls. Templates are flat design
+  // objects. v43.14-v43.18 incorrectly copied flat template keys onto the snapshot
+  // root, so reopening the card still used the unchanged data.controls values.
   const d=deepClone4314(cardData||{}),o=normalizeTemplateDesign(design)||{};
-  const skip=new Set(['card','setInfo','savedAt','version']);
+  if(!d.controls||typeof d.controls!=='object')d.controls={};
+  const v2Keys=new Set(['v2Contrast','v2Saturation','v2Brightness']);
+  const special=new Set(['freeform','frameTransforms','editing','card','setInfo','savedAt','version','meta','__meta']);
   Object.entries(o).forEach(([k,v])=>{
-    if(skip.has(k))return;
-    if(!includeV2 && ['v2Contrast','v2Saturation','v2Brightness'].includes(k))return;
-    if(k==='freeform'||k==='frameTransforms'||k==='editing')d[k]=deepClone4314(v);else d[k]=v;
+    if(special.has(k))return;
+    const isV2=v2Keys.has(k);
+    if(v2Only&&!isV2)return;
+    if(!includeV2&&isV2)return;
+    d.controls[k]=deepClone4314(v);
   });
-  d.savedAt=new Date().toISOString();return d;
+  if(!v2Only){
+    if(o.freeform&&typeof o.freeform==='object')d.freeform=deepClone4314(o.freeform);
+    if(o.frameTransforms&&typeof o.frameTransforms==='object')d.frameTransforms=deepClone4314(o.frameTransforms);
+    if(o.editing&&typeof o.editing==='object')d.editing={...(d.editing||{}),...deepClone4314(o.editing)};
+  }
+  d.savedAt=new Date().toISOString();
+  return d;
 }
-async function updateDiskCardRecord4314(project,card,design=null,includeV2=true){
-  if(!diskProjectRootHandle)return {ok:true,data:card.data};
+async function updateDiskCardRecord4314(project,card,design=null,includeV2=true,v2Only=false){
+  if(!diskProjectRootHandle)return {ok:false,data:card.data,error:'Project folder is not connected'};
   try{
     const {pd,cd}=await diskProjectDirs(project,card,true);
     await writeJson(pd,'project.json',{format:'MTGProxyBuilderProject',schema:DISK_SCHEMA,id:project.id,name:project.name,createdAt:project.createdAt,updatedAt:project.updatedAt});
     const f=await tryFile(cd,'card.json');
-    if(!f)return {ok:false,data:card.data};
+    if(!f)return {ok:false,data:card.data,error:'card.json not found'};
     const rec=JSON.parse(await f.text());
-    // Disk record is authoritative when browser index has only metadata/null data.
-    const base=rec.data||card.data||{};const merged=design?mergeDesignIntoCardData4314(base,design,{includeV2}):deepClone4314(base);
-    rec.builderVersion='43.15';rec.projectId=project.id;rec.projectName=project.name;rec.id=card.id;rec.name=card.name;rec.updatedAt=card.updatedAt;rec.data=merged;
-    // rec.assets is intentionally untouched: applying a template must never remove artwork/frames.
-    await writeJson(cd,'card.json',rec);card.data=deepClone4314(merged);return {ok:true,data:merged};
-  }catch(e){console.error('Batch disk update failed',e);return {ok:false,data:card.data}}
+    const base=rec.data||card.data||{};
+    const merged=design?mergeDesignIntoCardData4314(base,design,{includeV2,v2Only}):deepClone4314(base);
+    rec.builderVersion='43.18';rec.projectId=project.id;rec.projectName=project.name;rec.id=card.id;rec.name=card.name;rec.updatedAt=card.updatedAt;rec.data=merged;
+    // Never touch rec.assets here. Batch layout/tweak changes must not remove artwork.
+    await writeJson(cd,'card.json',rec);
+    // Read back and verify that the requested values really reached the saved snapshot.
+    const verifyFile=await tryFile(cd,'card.json');
+    if(!verifyFile)return {ok:false,data:card.data,error:'verification read failed'};
+    const verify=JSON.parse(await verifyFile.text());
+    if(!verify?.data?.controls)return {ok:false,data:card.data,error:'saved controls missing'};
+    card.data=deepClone4314(verify.data);return {ok:true,data:verify.data};
+  }catch(e){console.error('Batch disk update failed',e);return {ok:false,data:card.data,error:e?.message||String(e)}}
 }
 async function applyTemplateToProject4314(projectId){
   let ps=getProjects(),p=ps.find(x=>x.id===projectId);if(!p)return;
@@ -3866,20 +4214,39 @@ async function applyTemplateToProject4314(projectId){
   const tn=await chooseFromList('Apply Template to Project',`Project: ${p.name} • ${p.cards?.length||0} cards`,choices);if(!tn)return;
   const design=templateDesignByName4314(tn);if(!design){setAutosaveStatus('⚠ That template could not be read');return}
   const mode=await chooseFromList('What should be applied?',`Template: ${tn==='__default__'?'My Default':tn}`,[
-    {value:'all',label:'Everything Visual + V2 Tweaks',detail:'Layout, typography, frames, fade, outlines, layers and V2 brightness/contrast/saturation'},
-    {value:'visual',label:'Everything Visual (keep V2 tweaks)',detail:'Apply the visual template but leave each card’s V2 tweak settings unchanged'}
+    {value:'all',label:'Layout / Design + V2 Tweaks',detail:'Apply the complete visual template and V2 brightness/contrast/saturation'},
+    {value:'visual',label:'Layout / Design Only',detail:'Apply layout, typography, frames, fade and outlines; keep each card’s V2 tweaks'},
+    {value:'v2',label:'V2 Tweaks Only',detail:'Apply only V2 brightness, contrast and saturation; keep each card’s layout'}
   ]);if(!mode)return;
-  const ok=confirm(`Apply “${tn==='__default__'?'My Default':tn}” to all ${p.cards?.length||0} cards in “${p.name}”?\n\nCard names, rules text, mana, P/T and artwork will not be replaced.`);if(!ok)return;
-  let diskFailures=0,now=new Date().toISOString();
+  const count=p.cards?.length||0;if(!count){setAutosaveStatus('⚠ This project has no saved cards');return}
+  const ok=confirm(`Apply “${tn==='__default__'?'My Default':tn}” to all ${count} cards in “${p.name}”?\n\nCard names, rules text, mana, P/T and artwork will not be replaced.`);if(!ok)return;
+
+  // Disk is authoritative for disk-backed projects. Reconnect once before the batch
+  // instead of silently changing only browser recovery copies.
+  const root=await ensureDiskFolder(true);
+  if(!root){setAutosaveStatus('⚠ Reconnect the Project Folder before applying a template to the project');showAppToast?.('⚠ Project Folder needs reconnection');return}
+
+  let changed=0,failures=[],now=new Date().toISOString();
   for(const c of (p.cards||[])){
     c.updatedAt=now;
-    if(diskProjectRootHandle){const r=await updateDiskCardRecord4314(p,c,design,mode==='all');if(!r.ok)diskFailures++;else c.data=deepClone4314(r.data)}
-    else c.data=mergeDesignIntoCardData4314(c.data,design,{includeV2:mode==='all'});
+    const r=await updateDiskCardRecord4314(p,c,design,mode!=='visual',mode==='v2');
+    if(!r.ok)failures.push(`${c.name}: ${r.error||'save failed'}`);else{changed++;c.data=deepClone4314(r.data)}
   }
-  p.updatedAt=now;putProjects(ps);if(diskProjectRootHandle)await writeDiskIndex();renderStartupProjects();
-  if(currentProjectId===p.id&&currentProjectCardId){const c=p.cards.find(x=>x.id===currentProjectCardId);if(c?.data)applyBuilderState(c.data)}
-  setAutosaveStatus(diskFailures?`⚠ Template applied, but ${diskFailures} disk card save${diskFailures===1?'':'s'} failed`:`✓ Template applied to ${p.cards?.length||0} cards in ${p.name}`);
-  showAppToast?.(`✓ Project template applied: ${p.name}`);
+  p.updatedAt=now;
+  if(!putProjects(ps)){setAutosaveStatus('⚠ Disk cards changed, but browser project index could not be updated');return}
+  await writeDiskIndex();renderStartupProjects();
+
+  // Reload the active card from its newly written disk record so the canvas visibly
+  // changes immediately and its artwork is restored through the normal disk loader.
+  if(currentProjectId===p.id&&currentProjectCardId){await loadDiskCard(p.id,currentProjectCardId)}
+  if(failures.length){
+    console.warn('Project template batch failures',failures);
+    setAutosaveStatus(`⚠ Template changed ${changed} of ${count} cards; ${failures.length} failed`);
+    showAppToast?.(`⚠ Changed ${changed}/${count} cards`);
+  }else{
+    setAutosaveStatus(`✓ Template applied and verified on ${changed} of ${count} cards in ${p.name}`);
+    showAppToast?.(`✓ Updated ${changed}/${count} cards`);
+  }
 }
 async function copyDir4314(src,dst){
   for await (const [name,h] of src.entries()){
@@ -3895,7 +4262,7 @@ async function duplicateProjectOnDisk4314(oldP,newP){
     const newCardsDir=await newDir.getDirectoryHandle('Cards',{create:true}),oldCardsDir=await oldDir.getDirectoryHandle('Cards');
     for(let i=0;i<(oldP.cards||[]).length;i++){
       const oc=oldP.cards[i],nc=newP.cards[i],srcCd=await oldCardsDir.getDirectoryHandle('card_'+oc.id),dstCd=await newCardsDir.getDirectoryHandle('card_'+nc.id,{create:true});await copyDir4314(srcCd,dstCd);
-      const f=await tryFile(dstCd,'card.json');if(f){const rec=JSON.parse(await f.text());rec.builderVersion='43.15';rec.projectId=newP.id;rec.projectName=newP.name;rec.id=nc.id;rec.name=nc.name;rec.createdAt=nc.createdAt;rec.updatedAt=nc.updatedAt;rec.data=deepClone4314(nc.data);await writeJson(dstCd,'card.json',rec)}
+      const f=await tryFile(dstCd,'card.json');if(f){const rec=JSON.parse(await f.text());rec.builderVersion='43.18';rec.projectId=newP.id;rec.projectName=newP.name;rec.id=nc.id;rec.name=nc.name;rec.createdAt=nc.createdAt;rec.updatedAt=nc.updatedAt;rec.data=deepClone4314(nc.data);await writeJson(dstCd,'card.json',rec)}
     }
     return true;
   }catch(e){console.error('Project folder duplication failed',e);return false}
@@ -3918,7 +4285,7 @@ function renderStartupProjects(){
   const pm=document.createElement('button');pm.type='button';pm.className='secondary startup-manage';pm.title='Project actions';pm.textContent='⋯';
   const cards=document.createElement('div');cards.className='startup-card-list';
   pb.addEventListener('click',()=>{cards.classList.toggle('open');pb.querySelector('.arrow').textContent=cards.classList.contains('open')?'⌄':'›'});
-  pm.addEventListener('click',async()=>{const a=await chooseFromList('Project Actions',p.name,[{value:'newcard',label:'＋ New Card',detail:'Create another card in this project'},{value:'applytemplate',label:'Apply Template to Project',detail:'Batch-apply a saved visual template, including optional V2 tweaks'},{value:'saveas',label:'Save Project As…',detail:'Create an independent copy and keep the original unchanged'},{value:'rename',label:'Rename Project',detail:'Change this project title'},{value:'export',label:'Export Project',detail:'Save this project as a portable file'},{value:'delete',label:'Delete Project',detail:`Remove project and ${p.cards?.length||0} saved card${(p.cards?.length||0)===1?'':'s'}`}]);if(a==='newcard')beginNewCardInProject(p.id);else if(a==='applytemplate')applyTemplateToProject4314(p.id);else if(a==='saveas')saveProjectAs4314(p.id);else if(a==='rename')renameProjectById(p.id);else if(a==='export'){currentProjectId=p.id;exportCurrentProject()}else if(a==='delete')deleteProjectById(p.id)});
+  pm.addEventListener('click',async()=>{const a=await chooseFromList('Project Actions',p.name,[{value:'newcard',label:'＋ New Card',detail:'Create another card in this project'},{value:'applytemplate',label:'Apply Template to Project',detail:'Batch-apply a saved visual template, including optional V2 tweaks'},{value:'saveas',label:'Save Project As…',detail:'Create an independent copy and keep the original unchanged'},{value:'rename',label:'Rename Project',detail:'Change this project title'},{value:'exportcards',label:'Export Project Cards (PNGs)',detail:'Render every saved card to a folder you choose'},{value:'export',label:'Export Project Data',detail:'Save this project as a portable data file'},{value:'delete',label:'Delete Project',detail:`Remove project and ${p.cards?.length||0} saved card${(p.cards?.length||0)===1?'':'s'}`}]);if(a==='newcard')beginNewCardInProject(p.id);else if(a==='applytemplate')applyTemplateToProject4314(p.id);else if(a==='saveas')saveProjectAs4314(p.id);else if(a==='rename')renameProjectById(p.id);else if(a==='exportcards')exportProjectCards4318(p.id);else if(a==='export'){currentProjectId=p.id;exportCurrentProject()}else if(a==='delete')deleteProjectById(p.id)});
   (p.cards||[]).forEach(c=>{const row=document.createElement('div');row.className='startup-row';const cb=document.createElement('button');cb.type='button';cb.className='startup-card';cb.innerHTML=`<strong>${escapeHtml(c.name)}</strong>${c.updatedAt?`<small>Saved ${escapeHtml(new Date(c.updatedAt).toLocaleString())}</small>`:''}`;cb.addEventListener('click',()=>openStartupCard(p.id,c.id));const cm=document.createElement('button');cm.type='button';cm.className='secondary startup-manage';cm.title='Card actions';cm.textContent='⋯';cm.addEventListener('click',async()=>{const a=await chooseFromList('Card Actions',c.name,[{value:'rename',label:'Rename Card',detail:'Change this saved card title'},{value:'delete',label:'Delete Card',detail:`Remove this card from ${p.name}`}]);if(a==='rename')renameCardById(p.id,c.id);else if(a==='delete')deleteCardById(p.id,c.id)});row.append(cb,cm);cards.appendChild(row)});
   if(!(p.cards||[]).length){const e=document.createElement('small');e.className='startup-note';e.textContent='No cards saved in this project yet.';cards.appendChild(e)}
   prow.append(pb,pm);group.append(prow,cards);wrap.appendChild(group)
@@ -3926,6 +4293,60 @@ function renderStartupProjects(){
  const a=getRecoveryAutosave();if(rec)rec.classList.toggle('show',!!a);if(a){const ps2=getProjects(),p=ps2.find(x=>x.id===a.projectId),c=p?.cards?.find(x=>x.id===a.cardId);const t=$('#startupRecoveryTitle'),d=$('#startupRecoveryDetail');if(t)t.textContent='Resume Last Session';if(d)d.textContent=[p?.name,c?.name,a.data.savedAt?('Autosaved '+new Date(a.data.savedAt).toLocaleString()):''].filter(Boolean).join(' • ')}
 }
 function offerAutosaveRestore(){updateProjectHeader();renderStartupProjects()}
+
+
+// ---------- v43.21 batch project PNG export + template overwrite ----------
+const EXPORT_HANDLE_KEY='projectExportRoot';
+async function rememberExportHandle4318(h){try{const db=await openHandleDB();await new Promise((res,rej)=>{const tx=db.transaction(DISK_HANDLE_STORE,'readwrite');tx.objectStore(DISK_HANDLE_STORE).put(h,EXPORT_HANDLE_KEY);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch(e){console.warn('Could not remember export folder',e)}}
+async function recallExportHandle4318(){try{const db=await openHandleDB();const h=await new Promise((res,rej)=>{const tx=db.transaction(DISK_HANDLE_STORE,'readonly'),r=tx.objectStore(DISK_HANDLE_STORE).get(EXPORT_HANDLE_KEY);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error)});db.close();return h}catch{return null}}
+async function chooseExportFolder4318(){
+  if(!diskApiAvailable()){setAutosaveStatus('⚠ Batch folder export requires Chrome/Edge File System Access');return null}
+  const remembered=await recallExportHandle4318();
+  if(remembered){
+    let perm='prompt';try{perm=await remembered.queryPermission?.({mode:'readwrite'})||'prompt'}catch{}
+    const choice=await chooseFromList('Where are we saving?',`Current export folder: ${remembered.name}`,[
+      {value:'remembered',label:`Use ${remembered.name}`,detail:'Save this project export to the remembered folder'},
+      {value:'choose',label:'Choose Another Export Folder',detail:'Pick a different folder on your hard drive'}
+    ]);if(!choice)return null;
+    if(choice==='remembered'){
+      try{if(perm!=='granted')perm=await remembered.requestPermission?.({mode:'readwrite'});if(perm==='granted')return remembered}catch{}
+    }
+  }
+  try{const h=await window.showDirectoryPicker({id:'mtg-proxy-builder-exports',mode:'readwrite'});let p=await h.requestPermission?.({mode:'readwrite'});if(p&&p!=='granted')throw new Error('Write permission not granted');await rememberExportHandle4318(h);return h}catch(e){if(e?.name!=='AbortError')setAutosaveStatus('⚠ Could not connect export folder');return null}
+}
+async function writeBlob4318(dir,name,blob){const fh=await dir.getFileHandle(name,{create:true}),w=await fh.createWritable();await w.write(blob);await w.close()}
+function exportPngName4318(name,version){const base=safeDiskName(name||'card');return version===1?`${base}.png`:`${base}_V2.png`}
+async function exportProjectCards4318(projectId=currentProjectId){
+  const ps=getProjects(),p=ps.find(x=>x.id===projectId);if(!p){setAutosaveStatus('⚠ No project selected');return}
+  if(!(p.cards||[]).length){setAutosaveStatus('⚠ This project has no saved cards to export');return}
+  const mode=await chooseFromList('Export Project Cards',`${p.name} • ${p.cards.length} saved cards`,[
+    {value:'v1',label:'Version 1',detail:'Export original-art version of every card'},
+    {value:'v2',label:'Version 2',detail:'Export tweaked-art version of every card'},
+    {value:'both',label:'Both Versions',detail:'Create separate Version 1 and Version 2 folders'}
+  ]);if(!mode)return;
+  const root=await ensureDiskFolder(true);if(!root){setAutosaveStatus('⚠ Reconnect the Project Folder before batch exporting');return}
+  const exportRoot=await chooseExportFolder4318();if(!exportRoot)return;
+  let projectOut;try{projectOut=await exportRoot.getDirectoryHandle(safeDiskName(p.name)+' - Export',{create:true})}catch(e){setAutosaveStatus('⚠ Could not create project export folder');return}
+  const versions=mode==='both'?[1,2]:[mode==='v2'?2:1];const outDirs={};
+  try{for(const v of versions)outDirs[v]=mode==='both'?await projectOut.getDirectoryHandle(`Version ${v}`,{create:true}):projectOut}catch(e){setAutosaveStatus('⚠ Could not create export subfolders');return}
+  const oldPid=currentProjectId,oldCid=currentProjectCardId,oldState=captureBuilderState();let ok=0,fail=[];const total=p.cards.length*versions.length;
+  try{
+    for(let ci=0;ci<p.cards.length;ci++){
+      const card=p.cards[ci];
+      const loaded=await loadDiskCard(p.id,card.id);if(!loaded){fail.push(`${card.name}: could not load saved card`);continue}
+      for(const v of versions){
+        const n=ok+fail.length+1;setAutosaveStatus(`Exporting ${Math.min(n,total)} of ${total} — ${card.name} V${v} → ${exportRoot.name}/${safeDiskName(p.name)} - Export${mode==='both'?'/Version '+v:''}`);
+        try{const blob=await blobForVersion(v);if(!blob)throw new Error('PNG render failed');await writeBlob4318(outDirs[v],exportPngName4318(card.name,v),blob);ok++}catch(e){console.error('Batch PNG export failed',card.name,v,e);fail.push(`${card.name} V${v}`)}
+      }
+    }
+  }finally{
+    if(oldPid&&oldCid){const oldP=getProjects().find(x=>x.id===oldPid),oldC=oldP?.cards?.find(x=>x.id===oldCid);if(oldP&&oldC)await loadDiskCard(oldPid,oldCid);else{applyBuilderState(oldState);currentProjectId=oldPid;currentProjectCardId=oldCid;scheduleRender()}}
+    else{applyBuilderState(oldState);currentProjectId=oldPid;currentProjectCardId=oldCid;updateProjectHeader();scheduleRender()}
+  }
+  const where=`${exportRoot.name}/${safeDiskName(p.name)} - Export`;
+  if(fail.length){setAutosaveStatus(`⚠ Exported ${ok}/${total} PNGs to ${where}; ${fail.length} failed`);showAppToast?.(`⚠ Exported ${ok}/${total} PNGs`);console.warn('Batch export failures',fail)}
+  else{setAutosaveStatus(`✓ ${ok} PNG${ok===1?'':'s'} exported to ${where}`);showAppToast?.(`✓ ${ok} PNGs exported`)}
+}
 
 const PORTABLE_BACKUP_FORMAT='MTGProxyBuilderBackup';
 const PORTABLE_PROJECT_FORMAT='MTGProxyBuilderProject';
@@ -3943,7 +4364,7 @@ function portableStorageSnapshot(){
 }
 function exportAllProjectsBackup(){
   try{
-    const payload={format:PORTABLE_BACKUP_FORMAT,formatVersion:1,builderVersion:'43.15',exportedAt:new Date().toISOString(),active:{projectId:currentProjectId,cardId:currentProjectCardId},storage:portableStorageSnapshot()};
+    const payload={format:PORTABLE_BACKUP_FORMAT,formatVersion:1,builderVersion:'43.22',exportedAt:new Date().toISOString(),active:{projectId:currentProjectId,cardId:currentProjectCardId},storage:portableStorageSnapshot()};
     downloadJsonFile(payload,`mtg_proxy_builder_backup_${new Date().toISOString().slice(0,10)}.mtgproxybackup.json`);
     setAutosaveStatus('✓ Backup exported');
   }catch(e){console.error('Backup export failed',e);setAutosaveStatus('⚠ Backup export failed')}
@@ -3951,7 +4372,7 @@ function exportAllProjectsBackup(){
 function exportCurrentProject(){
   const {p}=projectContext();if(!p){setAutosaveStatus('⚠ No active project to export');return}
   try{
-    const payload={format:PORTABLE_PROJECT_FORMAT,formatVersion:1,builderVersion:'43.15',exportedAt:new Date().toISOString(),project:p};
+    const payload={format:PORTABLE_PROJECT_FORMAT,formatVersion:1,builderVersion:'43.22',exportedAt:new Date().toISOString(),project:p};
     downloadJsonFile(payload,`${safeFilePart(p.name)}.mtgproxyproject.json`);setAutosaveStatus('✓ Project exported: '+p.name);
   }catch(e){console.error('Project export failed',e);setAutosaveStatus('⚠ Project export failed')}
 }
@@ -3992,7 +4413,7 @@ function captureDesignState(){
   ['fadeColor','fadeEnd','fadeHeight','fadeTopOpacity','fadeTopFeather','fadeTopSoftness','fadeEdge','separatorMode','separatorX','separatorY','separatorWidth','separatorHeight','separatorThickness','separatorColor','separatorOpacity','separatorGlowColor','separatorGlowBlur','separatorShadowColor','separatorShadowBlur','separatorShadowX','separatorShadowY','manaOutlineWidth','manaOutlineColor','panelColor','panelBorderColor','panelBorderWidth','cardStyle','stdFramePreset','stdBorderColor','stdBorderWidth','stdPTFill','stdPTFillOpacity','stdPTBorder','stdPTBorderWidth','stdPTRadius','stdNameX','stdNameY','stdManaX','stdManaY','stdTypeX','stdTypeY','stdRulesX','stdRulesY','ptBoxColor','ptBoxOpacity','ptBoxBorderColor','ptBoxBorderWidth','ptBoxPadX','ptBoxPadY','ptBoxX','ptBoxY','ptBoxRadius']
     .forEach(k=>{const el=$('#'+k);if(el)o[k]=el.type==='checkbox'?el.checked:el.value});
   o.frameTransforms=JSON.parse(JSON.stringify(state.frameTransforms));
-  o.freeform={layers:state.freeform.layers.map(layer=>({...layer})),selected:state.freeform.selected,showGrid:state.freeform.showGrid,snapGrid:state.freeform.snapGrid,gridSize:state.freeform.gridSize};
+  o.freeform={layers:state.freeform.layers.map(layer=>({...layer})),selected:state.freeform.selected,showGrid:state.freeform.showGrid,snapGrid:state.freeform.snapGrid,gridSize:state.freeform.gridSize,guides:(state.freeform.guides||[]).map(g=>({...g})),showMovableGuides:state.freeform.showMovableGuides,snapMovableGuides:state.freeform.snapMovableGuides,lockMovableGuides:state.freeform.lockMovableGuides,guideThickness:state.freeform.guideThickness,guideLineStyle:state.freeform.guideLineStyle};
   o.editing={...state.editing};
   return o;
 }
@@ -4010,10 +4431,10 @@ function applyDesignState(raw,{autosave=true}={}){
     }
     if(o.editing&&typeof o.editing==='object')state.editing={...state.editing,...o.editing};
     if(o.freeform&&typeof o.freeform==='object'){
-      if(Array.isArray(o.freeform.layers))state.freeform.layers=o.freeform.layers.map(layer=>({...layer}));
+      if(Array.isArray(o.freeform.layers))restoreFreeformLayout(o.freeform.layers,o.freeform.selected||state.freeform.selected);
       if('selected' in o.freeform)state.freeform.selected=o.freeform.selected||state.freeform.selected;
       state.freeform.showGrid=!!o.freeform.showGrid;state.freeform.snapGrid=!!o.freeform.snapGrid;
-      state.freeform.gridSize=Math.max(.25,Number(o.freeform.gridSize)||2.5);
+      state.freeform.gridSize=Math.max(.25,Number(o.freeform.gridSize)||2.5);restoreMovableGuides(o.freeform);
     }
     // One stale UI helper should never make an otherwise valid template unloadable.
     const refreshers=[updateModeSpecificControls,updateStandardPTControls,setFreeformMode,updateGridControls,renderLayersPanel,updateQuickUI,renderContextProperties,showOutputs,scheduleRender];
@@ -4037,11 +4458,38 @@ function askForName(title,hint,initial='My Template'){
 }
 async function saveTemplate(){
   try{
-    const name=await askForName('Save Template','Name this reusable visual design. Layout, fade, outlines and V2 tweak settings are saved; card data and artwork are not.','My Template');if(!name)return;
+    const all=getSavedTemplates();
+    const names=Object.keys(all||{}).sort((a,b)=>a.localeCompare(b));
+    const actions=[{value:'new',label:'Save as New Template',detail:'Create a new reusable template with a new name'}];
+    if(names.length)actions.push({value:'update',label:'Update Existing Template',detail:'Choose a saved template and replace it with the current visual settings'});
+    const action=await chooseFromList('Save Template','Save the current layout, fade, outlines and V2 tweak settings. Card data and artwork are not included.',actions);
+    if(!action)return;
+    let name,isUpdate=action==='update';
+    if(action==='new'){
+      name=await askForName('Save as New Template','Name this reusable visual design.','My Template');
+      if(!name)return;
+      if(Object.prototype.hasOwnProperty.call(all,name)){
+        const overwrite=await chooseFromList('Template Already Exists',`A template named “${name}” already exists.`,[
+          {value:'update',label:`Update “${name}”`,detail:'Replace the existing template with the current settings'},
+          {value:'rename',label:'Choose a Different Name',detail:'Keep the existing template unchanged'}
+        ]);
+        if(overwrite==='rename')return saveTemplate();
+        if(overwrite!=='update')return;
+        isUpdate=true;
+      }
+    }else{
+      const items=names.map(n=>{const rec=all[n],when=rec?.meta?.savedAt?new Date(rec.meta.savedAt).toLocaleString():'';return {value:n,label:n,detail:when?`Last saved ${when}`:'Saved template'}});
+      name=await chooseFromList('Update Existing Template','Choose the template you want to overwrite with the current visual settings.',items);
+      if(!name)return;
+      const confirmUpdate=await chooseFromList('Update Template?',`Replace “${name}” with the current layout, fade, outlines and V2 tweak settings?`,[
+        {value:'yes',label:`Update “${name}”`,detail:'The previous saved settings for this template will be replaced'}
+      ]);
+      if(confirmUpdate!=='yes')return;
+    }
     const o=captureDesignState(),savedAt=new Date().toISOString(),record={design:o,meta:{savedAt,kind:'named-template',schema:2}};
-    let all=getSavedTemplates();
     all[name]=record;localStorage.setItem(TEMPLATE_STORE_KEY,JSON.stringify(all));localStorage.setItem(LEGACY_TEMPLATE_STORE_KEY,JSON.stringify(all));localStorage.setItem('mtgProxyTemplate_v8',JSON.stringify(record));
-    if($('#fetchStatus'))$('#fetchStatus').textContent='✓ Template saved: '+name;setAutosaveStatus('✓ Template saved: '+name);showAppToast('✓ Template saved: '+name);renderWelcomeTemplates();
+    const msg=isUpdate?`✓ Template updated: ${name}`:`✓ Template saved: ${name}`;
+    if($('#fetchStatus'))$('#fetchStatus').textContent=msg;setAutosaveStatus(msg);showAppToast(msg);renderWelcomeTemplates();
   }catch(e){console.error('Template save failed',e);setAutosaveStatus('⚠ Template save failed');showAppToast('⚠ Template save failed — browser storage may be full.');}
 }
 function saveCurrentLayoutAsDefault(){
@@ -4162,6 +4610,17 @@ function resetPTBoxSettings(){
   scheduleRender();
 }
 
+function applyFadeMaskPreset(preset){
+  const positions={low:[58,75],mid:[42,60],high:[28,45],short:[56,61]};
+  const pair=positions[preset];if(!pair)return;
+  const set=(id,val)=>{const el=$('#'+id);if(el){el.value=String(val);el.dispatchEvent(new Event('input',{bubbles:true}));}};
+  const enabled=$('#fadeEnabled');if(enabled){enabled.checked=true;enabled.dispatchEvent(new Event('change',{bubbles:true}));}
+  set('fadeStart',pair[0]);set('fadeEnd',pair[1]);
+  set('fadeStrength',100);set('fadeTopOpacity',0);set('fadeTopFeather',0);
+  set('fadeCurve',1);set('fadeEdge',0);
+  syncFadeHeightFromEnds();showOutputs();scheduleRender();scheduleAutosave?.();
+}
+document.querySelectorAll('[data-fade-preset]').forEach(b=>b.addEventListener('click',()=>applyFadeMaskPreset(b.dataset.fadePreset)));
 function syncFadeHeightFromEnds(){
   const a=$('#fadeStart'),b=$('#fadeEnd'),h=$('#fadeHeight');if(!a||!b||!h)return;
   let start=Number(a.value)||0,end=Number(b.value)||100;if(end<=start)end=Math.min(100,start+.5);b.value=end;h.value=Math.max(5,Math.min(100,end-start));showOutputs();
@@ -4230,15 +4689,39 @@ async function loadTemplate(){
 }
 
 
+// v43.31: Selection restriction is a UI preference, not card/template data.
+let restrictActiveTab=true;
+const restrictedTextIds=new Set(['mana','name','type','rules','pt','collector','artist','proxy']);
+const restrictedFrameIds=new Set(['frameWhole','frameArt','frameTitle','frameType','frameRules','framePT','ptBox','fade']);
+function activeSelectionAllows(id){
+ if(!restrictActiveTab)return true;
+ const pane=document.querySelector('.inspector-pane.active');
+ if(pane?.id==='guidesPane')return false;
+ if(pane?.id==='layersPane')return id===state.freeform.selected;
+ const task=state.workflowTask;
+ if(task==='artwork')return id==='artwork';
+ if(task==='text')return restrictedTextIds.has(id);
+ if(task==='design')return restrictedFrameIds.has(id)||id==='separator';
+ // Setup/data/project are neutral contexts: allow direct selection to enter an editor.
+ return true;
+}
+const restrictControl=document.getElementById('restrictActiveTab');
+if(restrictControl){restrictControl.checked=true;restrictControl.addEventListener('change',e=>{restrictActiveTab=e.target.checked;canvas.classList.remove('ff-can-drag','ff-locked');});}
 function ffLayerIndex(id){return state.freeform.layers.findIndex(x=>x.id===id)}
-function ffSelect(id,openSection=true){
+function ffSelect(id,openSection=true,fromCanvas=false){
+  if(fromCanvas&&!activeSelectionAllows(id))return;
   const layer=ffLayer(id);if(!layer)return;
   state.freeform.selected=id;
   updateFreeformInspector();
   renderLayersPanel();
   const uiMap={artwork:'artwork',mana:'mana',name:'name',type:'type',rules:'rules',pt:'pt',collector:'footer',artist:'footer',proxy:'footer',
     frameWhole:'frame',frameArt:'frame',frameTitle:'frame',frameType:'frame',frameRules:'frame',framePT:'frame',ptBox:'pt',fade:'frame'};
-  if(typeof setUISelection==='function')setUISelection(uiMap[id]||'card',false);
+  if(typeof setUISelection==='function'){
+    if(fromCanvas&&restrictActiveTab){
+      state.uiSelected=uiMap[id]||'card';
+      if(document.querySelector('.inspector-pane.active')?.id==='propertiesPane')renderContextProperties();
+    }else setUISelection(uiMap[id]||'card',false);
+  }
   if(openSection && $('#advancedDrawer')?.classList.contains('open'))openFreeformSection(layer.section);
   scheduleRender();
 }
@@ -4469,6 +4952,7 @@ function hitFreeformLayer(x,y){
     const layer=state.freeform.layers[i];if(!layer.visible)continue;
     const textIds=new Set(['mana','name','type','rules','collector','artist','proxy','pt']);
     const frameIds=new Set(['frameWhole','frameArt','frameTitle','frameType','frameRules','framePT','ptBox','fade']);
+    if(!activeSelectionAllows(layer.id))continue;
     if(state.editing?.lockTextSelection&&textIds.has(layer.id))continue;
     if(state.editing?.lockFrames&&frameIds.has(layer.id))continue;
     if(state.editing?.lockArtwork&&layer.id==='artwork')continue;
@@ -4477,22 +4961,48 @@ function hitFreeformLayer(x,y){
   }
   return null;
 }
+let activeGuideDrag=null;
+function guideCanvasPosition(e){const r=canvas.getBoundingClientRect();return {x:Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100)),y:Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100))}}
+canvas.addEventListener('pointerdown',e=>{if(!$('#mgEdit')?.checked||document.querySelector('.inspector-pane.active')?.id!=='guidesPane'||!state.freeform.showMovableGuides||state.freeform.lockMovableGuides)return;const p=guideCanvasPosition(e);const found=(state.freeform.guides||[]).find(g=>g.visible!==false&&!g.locked&&Math.abs((g.axis==='x'?p.x:p.y)-g.value)<1.2);if(!found)return;activeGuideDrag=found;canvas.setPointerCapture?.(e.pointerId);refreshMovableGuidesUI();scheduleRender();e.stopImmediatePropagation()},true);
+canvas.addEventListener('pointermove',e=>{if(!activeGuideDrag)return;const p=guideCanvasPosition(e);activeGuideDrag.value=Math.round(p[activeGuideDrag.axis]*10)/10;refreshMovableGuidesUI();scheduleRender();e.stopImmediatePropagation()},true);
+for(const evt of ['pointerup','pointercancel'])canvas.addEventListener(evt,e=>{if(activeGuideDrag){activeGuideDrag=null;try{if(canvas.hasPointerCapture?.(e.pointerId))canvas.releasePointerCapture(e.pointerId)}catch{};scheduleAutosave?.();e.stopImmediatePropagation()}},true);
+for(const [id,key] of [['mgShow','showMovableGuides'],['mgSnap','snapMovableGuides'],['mgLock','lockMovableGuides']])$('#'+id)?.addEventListener('change',e=>{state.freeform[key]=e.target.checked;scheduleRender();scheduleAutosave?.()});
+$('#mgAdd')?.addEventListener('click',()=>{const axis=$('#mgAxis').value;state.freeform.guides.push({id:Date.now(),axis,value:Math.max(0,Math.min(100,Number($('#mgPosition').value)||0)),color:'#00e5ff',visible:true,locked:false});refreshMovableGuidesUI();scheduleRender();scheduleAutosave?.()});
+for(const [id,key] of [['mgThickness','guideThickness'],['mgLineStyle','guideLineStyle']])$('#'+id)?.addEventListener('input',e=>{state.freeform[key]=id==='mgThickness'?Number(e.target.value):e.target.value;scheduleRender();scheduleAutosave?.()});
+$('#mgClear')?.addEventListener('click',()=>{if(!confirm('Remove all movable guides from this layout?'))return;state.freeform.guides=[];refreshMovableGuidesUI();scheduleRender();scheduleAutosave?.()});
 canvas.addEventListener('pointerdown',e=>{
-  if(v('cardStyle')!=='freeform')return;
+  if(activeGuideDrag)return;
+  if(v('cardStyle')!=='freeform'){
+    const hit=nonFreeformObjectAtPoint(e);
+    if(!activeSelectionAllows(hit==='frame'?'frameWhole':hit==='footer'?'collector':hit))return;
+    setUISelection(hit,true);
+    if(hit==='artwork'&&!state.editing?.lockArtwork){
+      const p=canvasPoint(e);state.nonFreeformDrag={pointerId:e.pointerId,x:p.x,y:p.y,artX:Number($('#artX')?.value)||0,artY:Number($('#artY')?.value)||0};
+      canvas.setPointerCapture?.(e.pointerId);e.preventDefault();
+    }
+    return;
+  }
   const p=canvasPoint(e),layer=hitFreeformLayer(p.x,p.y);
   if(!layer)return;
-  ffSelect(layer.id);
+  ffSelect(layer.id,true,true);
   if(layer.locked){canvas.classList.add('ff-locked');return}
   state.freeform.drag={id:layer.id,startX:p.x,startY:p.y,origX:layer.x,origY:layer.y};
   canvas.setPointerCapture?.(e.pointerId);canvas.classList.add('ff-can-drag');
 });
 canvas.addEventListener('pointermove',e=>{
-  if(v('cardStyle')!=='freeform')return;
+  if(v('cardStyle')!=='freeform'){
+    const drag=state.nonFreeformDrag;if(!drag)return;
+    const p=canvasPoint(e);
+    for(const [id,value] of [['artX',drag.artX+(p.x-drag.x)/canvas.width*100],['artY',drag.artY+(p.y-drag.y)/canvas.height*100]]){
+      const el=$('#'+id);if(el){el.value=Math.max(Number(el.min)||-100,Math.min(Number(el.max)||100,value));el.dispatchEvent(new Event('input',{bubbles:true}));}
+    }
+    scheduleRender();return;
+  }
   const p=canvasPoint(e);
   if(state.freeform.drag){
     const layer=ffLayer(state.freeform.drag.id);if(!layer||layer.locked)return;
-    layer.x=ffSnap(state.freeform.drag.origX+(p.x-state.freeform.drag.startX)/canvas.width*100);
-    layer.y=ffSnap(state.freeform.drag.origY+(p.y-state.freeform.drag.startY)/canvas.height*100);
+    layer.x=snapToMovableGuides(ffSnap(state.freeform.drag.origX+(p.x-state.freeform.drag.startX)/canvas.width*100),'x');
+    layer.y=snapToMovableGuides(ffSnap(state.freeform.drag.origY+(p.y-state.freeform.drag.startY)/canvas.height*100),'y');
     updateFreeformInspector();syncGlobalFromFreeformLayer(layer);scheduleRender();return;
   }
   const over=hitFreeformLayer(p.x,p.y);
@@ -4500,8 +5010,9 @@ canvas.addEventListener('pointermove',e=>{
   canvas.classList.toggle('ff-locked',!!over&&over.locked);
 });
 function endFreeformDrag(e){
+  if(state.nonFreeformDrag){state.nonFreeformDrag=null;try{if(canvas.hasPointerCapture?.(e.pointerId))canvas.releasePointerCapture(e.pointerId)}catch{};scheduleAutosave?.();}
   if(state.freeform.drag){
-    state.freeform.drag=null;canvas.releasePointerCapture?.(e.pointerId);
+    state.freeform.drag=null;try{if(canvas.hasPointerCapture?.(e.pointerId))canvas.releasePointerCapture(e.pointerId)}catch{};scheduleAutosave?.();
   }
   canvas.classList.remove('ff-can-drag','ff-locked');
 }
@@ -4638,6 +5149,14 @@ $('#customFont')?.addEventListener('change',e=>loadCustomFont(e.target));
 $('#resetTemplate')?.addEventListener('click',resetTemplate);
 $('#applyBaseline')?.addEventListener('click',applyProjectBaseline);
 $('#mainSaveCard')?.addEventListener('click',()=>saveProjectCard(false));
+$('#prevProjectCard')?.addEventListener('click',()=>navigateProjectCard(-1));
+$('#nextProjectCard')?.addEventListener('click',()=>navigateProjectCard(1));
+document.addEventListener('keydown',e=>{
+  if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey)return;
+  const tag=document.activeElement?.tagName?.toLowerCase();if(tag==='input'||tag==='textarea'||tag==='select'||document.activeElement?.isContentEditable)return;
+  if(e.key==='ArrowLeft'&&!$('#prevProjectCard')?.disabled){e.preventDefault();navigateProjectCard(-1)}
+  else if(e.key==='ArrowRight'&&!$('#nextProjectCard')?.disabled){e.preventDefault();navigateProjectCard(1)}
+});
 $('#mainSaveAsCard')?.addEventListener('click',()=>saveProjectCard(true));
 $('#renameCurrentProject')?.addEventListener('click',()=>{if(currentProjectId)renameProjectById(currentProjectId);else setAutosaveStatus('⚠ No project selected')});
 $('#renameCurrentCard')?.addEventListener('click',()=>{if(currentProjectId&&currentProjectCardId)renameCardById(currentProjectId,currentProjectCardId);else setAutosaveStatus('⚠ No saved card selected')});
@@ -4652,9 +5171,28 @@ $('#welcomeExportBackup')?.addEventListener('click',exportAllProjectsBackup);
 $('#welcomeImportBackup')?.addEventListener('click',()=>$('#projectBackupImportFile')?.click());
 $('#projectBackupImportFile')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(f)await importPortableBackupFile(f);e.target.value=''});
 $('#singleProjectImportFile')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(f)await importSingleProjectFile(f);e.target.value=''});
+$('#startBlankCard')?.addEventListener('click',()=>{
+  state.card=null;
+  ['scryfallUrl','cardName','manaCost','typeLine','oracleText','pt','collector','setLine'].forEach(id=>{const el=$('#'+id);if(el)el.value=''});
+  if($('#artist'))$('#artist').value='MINEMETH';
+  if($('#proxyLine'))$('#proxyLine').value='For Proxy Play';
+  if($('#dataLocked'))$('#dataLocked').checked=false;
+  syncFieldLock();
+  if($('#fetchStatus'))$('#fetchStatus').textContent='Custom card ready — enter any card data below.';
+  projectDirty=true;
+  scheduleAutosave?.();
+  render();
+  if(state.workflowTask==='data')renderWorkflow();
+});
 $('#dataLocked')?.addEventListener('change',syncFieldLock);
 $$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.version=+b.dataset.version;scheduleRender()});
 $$('input,textarea,select').forEach(el=>{if(!['art1','art2','scryfallUrl'].includes(el.id))el.addEventListener('input',()=>{syncFreeformFromGlobalControl(el.id);showOutputs();scheduleRender();scheduleAutosave()});el.addEventListener('change',scheduleAutosave)});
+// Custom/manual card text must preload mana/tap symbols too; previously only Scryfall card data did this.
+['manaCost','oracleText'].forEach(id=>{
+  const el=$('#'+id); if(!el)return;
+  el.addEventListener('input',()=>{preloadEditableSymbols();});
+  el.addEventListener('change',()=>{preloadEditableSymbols();});
+});
 
 
 ['nameStroke','typeStroke','rulesStroke','footerStroke','ptStroke'].forEach(id=>{
