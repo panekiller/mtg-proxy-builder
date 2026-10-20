@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v43.35</title>
+  <title>MTG Proxy Builder v43.36</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -538,7 +538,7 @@ input[type="color"]{
 <main class="app-shell ui-v40-shell">
   <aside id="projectSidebar" class="project-sidebar workflow-sidebar">
     <div class="sidebar-title">
-      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.35</small></strong>
+      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.36</small></strong>
       <span>Card workflow</span>
     </div>
     <nav class="workflow-nav" aria-label="Card workflow">
@@ -3900,12 +3900,48 @@ function updateWorkspaceRulers(){
 function render(){renderTo(ctx,PREVIEW_W,PREVIEW_H,state.version);updateWorkspaceRulers()}
 function scheduleRender(){clearTimeout(state.renderTimer);state.renderTimer=setTimeout(render,40)}
 
-function blobForVersion(version){
-  return new Promise(resolve=>{
+// v43.36: Set PNG pHYs to approximately 1200 DPI (pixels per metre).
+// PNG pHYs uses integer pixels/metre, so the nearest value is 47244.
+async function with1200DpiMetadata(pngBlob){
+  if(!pngBlob)return pngBlob;
+  const data=new Uint8Array(await pngBlob.arrayBuffer());
+  const signature=[137,80,78,71,13,10,26,10];
+  if(data.length<33||!signature.every((v,i)=>data[i]===v))throw new Error('Invalid PNG export');
+  const view=new DataView(data.buffer,data.byteOffset,data.byteLength);
+  const u32=(i)=>view.getUint32(i,false);
+  let pos=8,physOffset=-1,physSize=0,insertAt=-1;
+  while(pos+12<=data.length){
+    const len=u32(pos),end=pos+12+len;
+    if(end>data.length)throw new Error('Malformed PNG chunk');
+    const type=String.fromCharCode(...data.subarray(pos+4,pos+8));
+    if(type==='IHDR')insertAt=end;
+    if(type==='pHYs'){physOffset=pos;physSize=end-pos;break;}
+    if(type==='IDAT'||type==='IEND')break;
+    pos=end;
+  }
+  if(insertAt<0)throw new Error('PNG missing IHDR');
+  const chunk=new Uint8Array(21),dv=new DataView(chunk.buffer);
+  dv.setUint32(0,9,false);
+  chunk.set([112,72,89,115],4); // pHYs
+  dv.setUint32(8,47244,false);dv.setUint32(12,47244,false);chunk[16]=1;
+  let crc=0xffffffff;
+  for(let i=4;i<17;i++){
+    crc^=chunk[i];
+    for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);
+  }
+  dv.setUint32(17,(crc^0xffffffff)>>>0,false);
+  const cut=physOffset>=0?physOffset:insertAt;
+  const skip=physOffset>=0?physSize:0;
+  return new Blob([data.subarray(0,cut),chunk,data.subarray(cut+skip)],{type:'image/png'});
+}
+
+async function blobForVersion(version){
+  const png=await new Promise(resolve=>{
     const c=document.createElement('canvas');c.width=EXPORT_W;c.height=EXPORT_H;
     renderTo(c.getContext('2d'),EXPORT_W,EXPORT_H,version,false);
     c.toBlob(resolve,'image/png');
   });
+  return with1200DpiMetadata(png);
 }
 async function downloadVersion(version){
   const blob=await blobForVersion(version);if(!blob)return;
@@ -3979,7 +4015,7 @@ async function loadImageFromFile(file){const url=URL.createObjectURL(file),img=n
 function releaseDiskImage(img){if(img?._diskObjectUrl)try{URL.revokeObjectURL(img._diskObjectUrl)}catch{}}
 async function writeDiskIndex(){
   if(!diskProjectRootHandle)return;const ps=getProjects();
-  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.35',updatedAt:new Date().toISOString(),deletions:getDeletionRecords(),projects:filterDeletedProjects(ps).map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
+  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.36',updatedAt:new Date().toISOString(),deletions:getDeletionRecords(),projects:filterDeletedProjects(ps).map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
 }
 async function diskProjectDirs(project,card,create=true){
   const projects=await getDir(diskProjectRootHandle,'Projects',create),pd=await getDir(projects,'project_'+project.id,create),cards=await getDir(pd,'Cards',create),cd=card?await getDir(cards,'card_'+card.id,create):null;return {projects,pd,cards,cd};
@@ -4045,7 +4081,7 @@ async function loadProjectsFromDiskFolder(){
 }
 
 const PROJECT_STORE_KEY='mtgProxyProjects_v429';
-// v43.35: Tombstones prevent a stale/offline disk index resurrecting deletions.
+// v43.36: Tombstones prevent a stale/offline disk index resurrecting deletions.
 const DELETION_STORE_KEY='mtgProxyDeletions_v4335';
 function mergeDeletionRecords(a={},b={}){
  const projects=[...new Set([...(a?.projects||[]),...(b?.projects||[])])];
