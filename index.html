@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v43.36</title>
+  <title>MTG Proxy Builder v43.37</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -538,7 +538,7 @@ input[type="color"]{
 <main class="app-shell ui-v40-shell">
   <aside id="projectSidebar" class="project-sidebar workflow-sidebar">
     <div class="sidebar-title">
-      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.36</small></strong>
+      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.37</small></strong>
       <span>Card workflow</span>
     </div>
     <nav class="workflow-nav" aria-label="Card workflow">
@@ -3900,7 +3900,7 @@ function updateWorkspaceRulers(){
 function render(){renderTo(ctx,PREVIEW_W,PREVIEW_H,state.version);updateWorkspaceRulers()}
 function scheduleRender(){clearTimeout(state.renderTimer);state.renderTimer=setTimeout(render,40)}
 
-// v43.36: Set PNG pHYs to approximately 1200 DPI (pixels per metre).
+// v43.37: Set PNG pHYs to approximately 1200 DPI (pixels per metre).
 // PNG pHYs uses integer pixels/metre, so the nearest value is 47244.
 async function with1200DpiMetadata(pngBlob){
   if(!pngBlob)return pngBlob;
@@ -4015,7 +4015,7 @@ async function loadImageFromFile(file){const url=URL.createObjectURL(file),img=n
 function releaseDiskImage(img){if(img?._diskObjectUrl)try{URL.revokeObjectURL(img._diskObjectUrl)}catch{}}
 async function writeDiskIndex(){
   if(!diskProjectRootHandle)return;const ps=getProjects();
-  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.36',updatedAt:new Date().toISOString(),deletions:getDeletionRecords(),projects:filterDeletedProjects(ps).map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
+  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.37',updatedAt:new Date().toISOString(),deletions:getDeletionRecords(),projects:filterDeletedProjects(ps).map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
 }
 async function diskProjectDirs(project,card,create=true){
   const projects=await getDir(diskProjectRootHandle,'Projects',create),pd=await getDir(projects,'project_'+project.id,create),cards=await getDir(pd,'Cards',create),cd=card?await getDir(cards,'card_'+card.id,create):null;return {projects,pd,cards,cd};
@@ -4081,7 +4081,7 @@ async function loadProjectsFromDiskFolder(){
 }
 
 const PROJECT_STORE_KEY='mtgProxyProjects_v429';
-// v43.36: Tombstones prevent a stale/offline disk index resurrecting deletions.
+// v43.37: Tombstones prevent a stale/offline disk index resurrecting deletions.
 const DELETION_STORE_KEY='mtgProxyDeletions_v4335';
 function mergeDeletionRecords(a={},b={}){
  const projects=[...new Set([...(a?.projects||[]),...(b?.projects||[])])];
@@ -4149,7 +4149,7 @@ function captureBuilderState(){
  const controls={};document.querySelectorAll('input,textarea,select').forEach(el=>{if(!el.id||el.type==='file')return;controls[el.id]=el.type==='checkbox'?el.checked:el.value});
  return {version:4322,savedAt:new Date().toISOString(),controls,card:state.card,setInfo:state.setInfo,frameTransforms:JSON.parse(JSON.stringify(state.frameTransforms)),freeform:{selected:state.freeform.selected,layers:state.freeform.layers.map(x=>({...x})),showGrid:state.freeform.showGrid,snapGrid:state.freeform.snapGrid,gridSize:state.freeform.gridSize,guides:(state.freeform.guides||[]).map(g=>({...g})),showMovableGuides:state.freeform.showMovableGuides,snapMovableGuides:state.freeform.snapMovableGuides,lockMovableGuides:state.freeform.lockMovableGuides,guideThickness:state.freeform.guideThickness,guideLineStyle:state.freeform.guideLineStyle},editing:{...state.editing}};
 }
-function applyBuilderState(o){if(!o)return;restoringState=true;try{
+function applyBuilderState(o){if(!o)return;ffHistory4337.undo=[];ffHistory4337.redo=[];ffHistory4337.context=null;ffHistoryButtons4337();restoringState=true;try{
  Object.entries(o.controls||{}).forEach(([id,val])=>{const el=$('#'+id);if(!el||el.type==='file')return;if(el.type==='checkbox')el.checked=!!val;else el.value=val});
  state.card=o.card||state.card;state.setInfo=o.setInfo||state.setInfo;if(o.frameTransforms)state.frameTransforms=JSON.parse(JSON.stringify(o.frameTransforms));
  if(o.freeform){if(Array.isArray(o.freeform.layers))restoreFreeformLayout(o.freeform.layers,o.freeform.selected||state.freeform.selected);state.freeform.showGrid=!!o.freeform.showGrid;state.freeform.snapGrid=!!o.freeform.snapGrid;state.freeform.gridSize=Number(o.freeform.gridSize)||2.5;restoreMovableGuides(o.freeform)}
@@ -4882,6 +4882,7 @@ function setupFreeformSectionHeaders(){
   });
 }
 function renderLayersPanel(){
+  ffHistoryInit4337();
   const list=$('#layersList');if(!list)return;
   list.innerHTML='';
   [...state.freeform.layers].reverse().forEach(layer=>{
@@ -4890,10 +4891,10 @@ function renderLayersPanel(){
     row.draggable=true;row.dataset.id=layer.id;
 
     const eye=document.createElement('button');eye.type='button';eye.title='Toggle visibility';eye.textContent=layer.visible?'👁':'○';
-    eye.addEventListener('click',e=>{e.stopPropagation();layer.visible=!layer.visible;renderLayersPanel();scheduleRender()});
+    eye.addEventListener('click',e=>{e.stopPropagation();ffHistoryCheckpoint4337();layer.visible=!layer.visible;renderLayersPanel();scheduleRender()});
 
     const lock=document.createElement('button');lock.type='button';lock.title='Lock / unlock';lock.textContent=layer.locked?'🔒':'🔓';
-    lock.addEventListener('click',e=>{e.stopPropagation();layer.locked=!layer.locked;updateFreeformInspector();renderLayersPanel();updateGridControls();scheduleRender()});
+    lock.addEventListener('click',e=>{e.stopPropagation();ffHistoryCheckpoint4337();layer.locked=!layer.locked;updateFreeformInspector();renderLayersPanel();updateGridControls();scheduleRender()});
 
     const nm=document.createElement('div');nm.className='layer-name';nm.textContent=layer.name;nm.title=layer.name;
     nm.addEventListener('click',()=>ffSelect(layer.id));
@@ -4916,9 +4917,50 @@ function renderLayersPanel(){
     list.appendChild(row);
   });
 }
+// v43.37: bounded, per-card Freeform layout history. This deliberately does not
+// attempt to undo project deletion, disk operations, or artwork file uploads.
+const ffHistory4337={undo:[],redo:[],restoring:false,limit:60,context:null};
+function ffHistoryContext4337(){return String(currentProjectId||'')+'|'+String(currentProjectCardId||'')+'|'+String($('#cardName')?.value||'')}
+function ffHistorySnapshot4337(){return JSON.stringify({layers:state.freeform.layers.map(l=>({...l})),selected:state.freeform.selected})}
+function ffHistoryButtons4337(){
+ const a=$('#ffUndo4337'),b=$('#ffRedo4337');if(a)a.disabled=!ffHistory4337.undo.length;if(b)b.disabled=!ffHistory4337.redo.length;
+}
+function ffHistoryCheckpoint4337(){
+ if(ffHistory4337.restoring)return;
+ const context=ffHistoryContext4337();
+ if(ffHistory4337.context!==context){ffHistory4337.context=context;ffHistory4337.undo=[];ffHistory4337.redo=[]}
+ const snap=ffHistorySnapshot4337();
+ if(ffHistory4337.undo.at(-1)!==snap){ffHistory4337.undo.push(snap);if(ffHistory4337.undo.length>ffHistory4337.limit)ffHistory4337.undo.shift()}
+ ffHistory4337.redo=[];ffHistoryButtons4337();
+}
+function ffHistoryTravel4337(direction){
+ const context=ffHistoryContext4337();if(ffHistory4337.context!==context){ffHistory4337.context=context;ffHistory4337.undo=[];ffHistory4337.redo=[];ffHistoryButtons4337();return}
+ const from=direction==='undo'?ffHistory4337.undo:ffHistory4337.redo;
+ const to=direction==='undo'?ffHistory4337.redo:ffHistory4337.undo;
+ if(!from.length)return;
+ const current=ffHistorySnapshot4337(),previous=from.pop();to.push(current);
+ ffHistory4337.restoring=true;
+ try{const snapshot=JSON.parse(previous);restoreFreeformLayout(snapshot.layers,snapshot.selected);updateFreeformInspector();renderLayersPanel();updateGridControls();scheduleRender();scheduleAutosave?.()}
+ finally{ffHistory4337.restoring=false;ffHistoryButtons4337()}
+}
+function ffHistoryInit4337(){
+ const host=$('#layersList');if(!host||$('#ffUndo4337'))return;
+ const bar=document.createElement('div');bar.style.cssText='display:flex;gap:6px;margin:6px 0 10px';
+ for(const [id,label,direction] of [['ffUndo4337','↶ Undo','undo'],['ffRedo4337','↷ Redo','redo']]){
+  const btn=document.createElement('button');btn.id=id;btn.type='button';btn.className='secondary';btn.textContent=label;btn.title=label+' Freeform layer changes';btn.addEventListener('click',()=>ffHistoryTravel4337(direction));bar.append(btn)
+ }
+ host.parentNode.insertBefore(bar,host);ffHistoryButtons4337();
+}
+document.addEventListener('keydown',e=>{
+ if(!(e.ctrlKey||e.metaKey)||e.altKey||v('cardStyle')!=='freeform')return;
+ const tag=(e.target?.tagName||'').toLowerCase();if(['input','textarea','select'].includes(tag)||e.target?.isContentEditable)return;
+ const key=e.key.toLowerCase();if(key==='z'){e.preventDefault();ffHistoryTravel4337(e.shiftKey?'redo':'undo')}
+ else if(key==='y'){e.preventDefault();ffHistoryTravel4337('redo')}
+});
 function moveFreeformLayer(id,delta){
   const i=ffLayerIndex(id),j=Math.max(0,Math.min(state.freeform.layers.length-1,i+delta));
   if(i<0||i===j)return;
+  ffHistoryCheckpoint4337();
   const [l]=state.freeform.layers.splice(i,1);state.freeform.layers.splice(j,0,l);
   renderLayersPanel();scheduleRender();
 }
@@ -4926,12 +4968,14 @@ function reorderFreeformLayer(fromId,targetId){
   if(fromId===targetId)return;
   const from=ffLayerIndex(fromId),target=ffLayerIndex(targetId);
   if(from<0||target<0)return;
+  ffHistoryCheckpoint4337();
   const [l]=state.freeform.layers.splice(from,1);
   const newTarget=state.freeform.layers.findIndex(x=>x.id===targetId);
   state.freeform.layers.splice(newTarget+1,0,l);
   renderLayersPanel();scheduleRender();
 }
 function resetFreeform(){
+  ffHistoryCheckpoint4337();
   const current=new Map(state.freeform.layers.map(l=>[l.id,l]));
   state.freeform.layers=FREEFORM_LAYER_DEFS.map(def=>current.get(def.id)||({...def}));
   if(!ffLayer(state.freeform.selected))state.freeform.selected='name';
@@ -4985,6 +5029,7 @@ function nudgeFreeformSelection(dx,dy,amount=null){
 
   // Nudging is intentionally precise even when Snap to Grid is enabled.
   // Mouse dragging still honors Snap to Grid.
+  ffHistoryCheckpoint4337();
   layer.x=(Number(layer.x)||0)+dx*step;
   layer.y=(Number(layer.y)||0)+dy*step;
 
@@ -5085,6 +5130,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(!layer)return;
   ffSelect(layer.id,true,true);
   if(layer.locked){canvas.classList.add('ff-locked');return}
+  ffHistoryCheckpoint4337();
   state.freeform.drag={id:layer.id,startX:p.x,startY:p.y,origX:layer.x,origY:layer.y};
   canvas.setPointerCapture?.(e.pointerId);canvas.classList.add('ff-can-drag');
 });
@@ -5120,23 +5166,23 @@ canvas.addEventListener('pointercancel',endFreeformDrag);
 canvas.addEventListener('pointerleave',e=>{if(!state.freeform.drag)canvas.classList.remove('ff-can-drag','ff-locked')});
 
 $('#ffSelectedLocked')?.addEventListener('change',()=>{
-  const layer=ffLayer(state.freeform.selected);if(!layer)return;layer.locked=$('#ffSelectedLocked').checked;renderLayersPanel();scheduleRender();
+  const layer=ffLayer(state.freeform.selected);if(!layer)return;ffHistoryCheckpoint4337();layer.locked=$('#ffSelectedLocked').checked;renderLayersPanel();scheduleRender();
 });
-$('#ffSelectedX')?.addEventListener('input',()=>{
+$('#ffSelectedX')?.addEventListener('input',()=>{ffHistoryCheckpoint4337();
   const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked)return;layer.x=ffSnap(+$('#ffSelectedX').value);$('#ffSelectedX').value=layer.x;syncGlobalFromFreeformLayer(layer);scheduleRender();
 });
-$('#ffSelectedY')?.addEventListener('input',()=>{
+$('#ffSelectedY')?.addEventListener('input',()=>{ffHistoryCheckpoint4337();
   const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked)return;layer.y=ffSnap(+$('#ffSelectedY').value);$('#ffSelectedY').value=layer.y;syncGlobalFromFreeformLayer(layer);scheduleRender();
 });
-$('#ffSelectedFontSize')?.addEventListener('input',()=>{
+$('#ffSelectedFontSize')?.addEventListener('input',()=>{ffHistoryCheckpoint4337();
   const layer=ffLayer(state.freeform.selected);
   if(!layer||layer.locked||!Number.isFinite(Number(layer.fontSize)))return;
   layer.fontSize=+$('#ffSelectedFontSize').value;
   syncGlobalFromFreeformLayer(layer);
   scheduleRender();
 });
-$('#ffSelectedW')?.addEventListener('input',()=>{const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked||layer.id!=='rules')return;layer.w=+$('#ffSelectedW').value;syncGlobalFromFreeformLayer(layer);scheduleRender()});
-$('#ffSelectedH')?.addEventListener('input',()=>{const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked||layer.id!=='rules')return;layer.h=+$('#ffSelectedH').value;syncGlobalFromFreeformLayer(layer);scheduleRender()});
+$('#ffSelectedW')?.addEventListener('input',()=>{ffHistoryCheckpoint4337();const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked||layer.id!=='rules')return;layer.w=+$('#ffSelectedW').value;syncGlobalFromFreeformLayer(layer);scheduleRender()});
+$('#ffSelectedH')?.addEventListener('input',()=>{ffHistoryCheckpoint4337();const layer=ffLayer(state.freeform.selected);if(!layer||layer.locked||layer.id!=='rules')return;layer.h=+$('#ffSelectedH').value;syncGlobalFromFreeformLayer(layer);scheduleRender()});
 $('#ffShowGrid')?.addEventListener('change',()=>{state.freeform.showGrid=$('#ffShowGrid').checked;scheduleRender()});
 $('#ffSnapGrid')?.addEventListener('change',()=>{state.freeform.snapGrid=$('#ffSnapGrid').checked});
 $('#ffGridSize')?.addEventListener('input',()=>{state.freeform.gridSize=+$('#ffGridSize').value;showOutputs();scheduleRender()});
