@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v43.34</title>
+  <title>MTG Proxy Builder v43.35</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -538,7 +538,7 @@ input[type="color"]{
 <main class="app-shell ui-v40-shell">
   <aside id="projectSidebar" class="project-sidebar workflow-sidebar">
     <div class="sidebar-title">
-      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.34</small></strong>
+      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.35</small></strong>
       <span>Card workflow</span>
     </div>
     <nav class="workflow-nav" aria-label="Card workflow">
@@ -3979,7 +3979,7 @@ async function loadImageFromFile(file){const url=URL.createObjectURL(file),img=n
 function releaseDiskImage(img){if(img?._diskObjectUrl)try{URL.revokeObjectURL(img._diskObjectUrl)}catch{}}
 async function writeDiskIndex(){
   if(!diskProjectRootHandle)return;const ps=getProjects();
-  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.22',updatedAt:new Date().toISOString(),projects:ps.map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
+  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.35',updatedAt:new Date().toISOString(),deletions:getDeletionRecords(),projects:filterDeletedProjects(ps).map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
 }
 async function diskProjectDirs(project,card,create=true){
   const projects=await getDir(diskProjectRootHandle,'Projects',create),pd=await getDir(projects,'project_'+project.id,create),cards=await getDir(pd,'Cards',create),cd=card?await getDir(cards,'card_'+card.id,create):null;return {projects,pd,cards,cd};
@@ -4029,13 +4029,62 @@ async function loadProjectsFromDiskFolder(){
   try{
     const pf=await tryFile(root,'mtg-proxy-builder.json');if(!pf){setAutosaveStatus('No MTG Proxy Builder index found in this folder');return}
     const idx=JSON.parse(await pf.text());if(idx.format!=='MTGProxyBuilderFolder')throw new Error('Not an MTG Proxy Builder folder');
-    const existing=getProjects(),byId=new Map(existing.map(p=>[p.id,p]));
-    for(const ip of idx.projects||[]){let p=byId.get(ip.id);if(!p){p={id:ip.id,name:ip.name,cards:[],createdAt:ip.createdAt||ip.updatedAt,updatedAt:ip.updatedAt};existing.push(p);byId.set(p.id,p)}p.name=ip.name||p.name;p.updatedAt=ip.updatedAt||p.updatedAt;p.cards=p.cards||[];const cards=new Map(p.cards.map(c=>[c.id,c]));for(const ic of ip.cards||[]){if(!cards.has(ic.id))p.cards.push({id:ic.id,name:ic.name,data:null,createdAt:ic.updatedAt,updatedAt:ic.updatedAt});else Object.assign(cards.get(ic.id),{name:ic.name,updatedAt:ic.updatedAt})}}
-    putProjects(existing);renderStartupProjects();setAutosaveStatus(`✓ Loaded ${idx.projects?.length||0} project${(idx.projects?.length||0)===1?'':'s'} from disk`);
+    const deletions=mergeDeletionRecords(getDeletionRecords(),idx.deletions);
+    localStorage.setItem(DELETION_STORE_KEY,JSON.stringify(deletions));
+    const existing=filterDeletedProjects(getProjects(),deletions),byId=new Map(existing.map(p=>[p.id,p]));
+    const incoming=filterDeletedProjects(idx.projects||[],deletions);
+    for(const ip of incoming){let p=byId.get(ip.id);if(!p){p={id:ip.id,name:ip.name,cards:[],createdAt:ip.createdAt||ip.updatedAt,updatedAt:ip.updatedAt};existing.push(p);byId.set(p.id,p)}p.name=ip.name||p.name;p.updatedAt=ip.updatedAt||p.updatedAt;p.cards=p.cards||[];const cards=new Map(p.cards.map(c=>[c.id,c]));for(const ic of ip.cards||[]){if(!cards.has(ic.id))p.cards.push({id:ic.id,name:ic.name,data:null,createdAt:ic.updatedAt,updatedAt:ic.updatedAt});else Object.assign(cards.get(ic.id),{name:ic.name,updatedAt:ic.updatedAt})}}
+    if(!putProjects(existing))return;
+    renderStartupProjects();
+    // Flush pending offline deletions only after merging all live disk records.
+    // Keep artwork/card directories intact; the index owns app membership.
+    try{await writeDiskIndex();setAutosaveStatus(`✓ Loaded ${incoming.length} project${incoming.length===1?'':'s'} from disk`)}
+    catch(e){console.error('Deletion index sync failed',e);setAutosaveStatus('⚠ Projects loaded; disk index update failed. Deleted items stay hidden in this browser.');}
+
   }catch(e){console.error(e);setAutosaveStatus('⚠ Could not read projects from that folder')}
 }
 
 const PROJECT_STORE_KEY='mtgProxyProjects_v429';
+// v43.35: Tombstones prevent a stale/offline disk index resurrecting deletions.
+const DELETION_STORE_KEY='mtgProxyDeletions_v4335';
+function mergeDeletionRecords(a={},b={}){
+ const projects=[...new Set([...(a?.projects||[]),...(b?.projects||[])])];
+ const cards=[...new Map([...(a?.cards||[]),...(b?.cards||[])].map(c=>[JSON.stringify([c.projectId,c.cardId]),{projectId:c.projectId,cardId:c.cardId}])).values()];
+ return {projects,cards};
+}
+function getDeletionRecords(){return mergeDeletionRecords(JSON.parse(localStorage.getItem(DELETION_STORE_KEY)||'{}'))}
+function filterDeletedProjects(projects,deletions=getDeletionRecords()){
+ const removedProjects=new Set(deletions.projects),removedCards=new Set(deletions.cards.map(c=>JSON.stringify([c.projectId,c.cardId])));
+ return projects.filter(p=>!removedProjects.has(p.id)).map(p=>({...p,cards:(p.cards||[]).filter(c=>!removedCards.has(JSON.stringify([p.id,c.id])))}));
+}
+function commitDeletion(next,record){
+ let previous;
+ try{
+  previous=localStorage.getItem(DELETION_STORE_KEY);
+  const deleted=mergeDeletionRecords(getDeletionRecords(),record);
+  localStorage.setItem(DELETION_STORE_KEY,JSON.stringify(deleted));
+  if(!putProjects(next)){
+   if(previous===null)localStorage.removeItem(DELETION_STORE_KEY);else localStorage.setItem(DELETION_STORE_KEY,previous);
+   return false;
+  }
+  return true;
+ }catch(e){console.error('Deletion could not be saved',e);setAutosaveStatus('⚠ Delete failed — browser storage is unavailable');return false}
+}
+function clearDeletedRecovery(projectId,cardId=null){
+ const recovery=getRecoveryAutosave();
+ if(currentProjectId===projectId&&(!cardId||currentProjectCardId===cardId)){
+  clearTimeout(autosaveTimer);autosaveTimer=null;
+  currentProjectCardId=null;if(!cardId)currentProjectId=null;projectDirty=false;
+ }
+ if(recovery?.projectId===projectId&&(!cardId||recovery.cardId===cardId))localStorage.removeItem(AUTOSAVE_KEY);
+}
+async function finishDeletionSync(label){
+ try{
+  const root=await ensureDiskFolder(false);
+  if(root){await writeDiskIndex();setAutosaveStatus('✓ '+label+' — browser and disk index updated');}
+  else setAutosaveStatus('✓ '+label+' in this browser. Reconnect Project Folder to update disk.');
+ }catch(e){console.error('Deletion disk sync failed',e);setAutosaveStatus('⚠ '+label+' in this browser, but disk update failed. Reconnect Project Folder; deleted items stay hidden here.');}
+}
 const AUTOSAVE_KEY='mtgProxyAutosave_v429';
 let currentProjectId=null,currentProjectCardId=null,autosaveTimer=null,restoringState=false,projectDirty=false;
 function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}
@@ -4132,24 +4181,24 @@ function renameProjectById(projectId){
  const name=prompt('Rename project:',p.name);if(name===null)return;const clean=name.trim();if(!clean){setAutosaveStatus('⚠ Project name cannot be empty');return}
  p.name=clean;p.updatedAt=new Date().toISOString();if(!putProjects(ps))return;renderStartupProjects();updateProjectHeader();setAutosaveStatus('✓ Project renamed: '+clean)
 }
-function deleteProjectById(projectId){
+async function deleteProjectById(projectId){
  const ps=getProjects(),p=ps.find(x=>x.id===projectId);if(!p)return;
  const count=p.cards?.length||0;if(!confirm(`Delete project “${p.name}” and its ${count} saved card${count===1?'':'s'}?\n\nThis cannot be undone.`))return;
- const next=ps.filter(x=>x.id!==projectId);if(!putProjects(next))return;
- if(currentProjectId===projectId){currentProjectId=null;currentProjectCardId=null;projectDirty=false;localStorage.removeItem(AUTOSAVE_KEY)}
- renderStartupProjects();updateProjectHeader();setAutosaveStatus('✓ Project deleted: '+p.name)
+ const next=ps.filter(x=>x.id!==projectId);if(!commitDeletion(next,{projects:[projectId]}))return;
+ clearDeletedRecovery(projectId);
+ renderStartupProjects();updateProjectHeader();await finishDeletionSync('Project deleted: '+p.name)
 }
 function renameCardById(projectId,cardId){
  const ps=getProjects(),p=ps.find(x=>x.id===projectId),c=p?.cards?.find(x=>x.id===cardId);if(!p||!c)return;
  const name=prompt('Rename card:',c.name);if(name===null)return;const clean=name.trim();if(!clean){setAutosaveStatus('⚠ Card name cannot be empty');return}
  c.name=clean;c.updatedAt=p.updatedAt=new Date().toISOString();if(!putProjects(ps))return;renderStartupProjects();updateProjectHeader();setAutosaveStatus('✓ Card renamed: '+clean)
 }
-function deleteCardById(projectId,cardId){
+async function deleteCardById(projectId,cardId){
  const ps=getProjects(),p=ps.find(x=>x.id===projectId),c=p?.cards?.find(x=>x.id===cardId);if(!p||!c)return;
  if(!confirm(`Delete card “${c.name}” from “${p.name}”?\n\nThis cannot be undone.`))return;
- p.cards=p.cards.filter(x=>x.id!==cardId);p.updatedAt=new Date().toISOString();if(!putProjects(ps))return;
- if(currentProjectId===projectId&&currentProjectCardId===cardId){currentProjectCardId=null;projectDirty=false;localStorage.removeItem(AUTOSAVE_KEY)}
- renderStartupProjects();updateProjectHeader();setAutosaveStatus('✓ Card deleted: '+c.name)
+ p.cards=p.cards.filter(x=>x.id!==cardId);p.updatedAt=new Date().toISOString();if(!commitDeletion(ps,{cards:[{projectId,cardId}]}))return;
+ clearDeletedRecovery(projectId,cardId);
+ renderStartupProjects();updateProjectHeader();await finishDeletionSync('Card deleted: '+c.name)
 }
 function duplicateProjectCard(){return saveProjectCard(true)}
 function getRecoveryAutosave(){try{const a=JSON.parse(localStorage.getItem(AUTOSAVE_KEY)||'null');return a?.data?a:null}catch{return null}}
