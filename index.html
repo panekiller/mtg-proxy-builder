@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MTG Proxy Builder v43.38</title>
+  <title>MTG Proxy Builder v43.39</title>
   <style>
 :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#0f141b;--line:#30363d;--text:#f0f3f6;--muted:#9ba7b4;--accent:#31c36b;--accent2:#2f81f7}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
@@ -538,7 +538,7 @@ input[type="color"]{
 <main class="app-shell ui-v40-shell">
   <aside id="projectSidebar" class="project-sidebar workflow-sidebar">
     <div class="sidebar-title">
-      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.38</small></strong>
+      <strong>MTG Proxy Builder <small id="appVersion" style="font-size:11px;font-weight:600;color:#c4d4e5;white-space:nowrap">v43.39</small></strong>
       <span>Card workflow</span>
     </div>
     <nav class="workflow-nav" aria-label="Card workflow">
@@ -651,6 +651,21 @@ input[type="color"]{
         </div>
         <button id="resetFrameTransform" type="button" class="secondary section-reset">Reset Selected Frame Position / Size</button>
         <button id="clearFrameGraphics" type="button" class="secondary section-reset">Clear Frame Graphics</button>
+
+
+        <details id="frameLibrarySection" open>
+          <summary><strong>Frame Library · v43.39</strong></summary>
+          <p class="hint">Reusable PNG overlays stored in this browser's IndexedDB. The library is independent of individual cards. Export backups before clearing browser data. Frames are user-supplied; no unverified official replicas are included.</p>
+          <div class="two-col">
+            <label>Frame category <select id="libraryCategory"><option>Standard</option><option>Borderless</option><option>Full-Art</option><option>Extended-Art</option><option>Showcase</option><option>Custom / AI</option></select></label>
+            <label>Frame piece <select id="libraryPiece"><option value="whole">Whole card</option><option value="title">Title</option><option value="art">Artwork</option><option value="type">Type line</option><option value="rules">Rules</option><option value="pt">P/T</option></select></label>
+          </div>
+          <label>Import PNG overlay into library <input id="libraryImport" type="file" accept="image/png" multiple /></label>
+          <label>Saved frames <select id="librarySelect" style="width:100%"><option value="">Loading library…</option></select></label>
+          <div class="two-col"><button type="button" id="libraryApply">Apply selected frame</button><button type="button" id="libraryRemove" class="secondary">Delete from library</button></div>
+          <div class="two-col"><button type="button" id="libraryExport" class="secondary">Download selected PNG</button><button type="button" id="libraryRefresh" class="secondary">Refresh library</button></div>
+          <p id="libraryStatus" class="hint" role="status">Frame Library is loading.</p>
+        </details>
 
         <details id="standardBorderColors">
           <summary>Standard card border colors</summary>
@@ -4019,7 +4034,7 @@ async function loadImageFromFile(file){const url=URL.createObjectURL(file),img=n
 function releaseDiskImage(img){if(img?._diskObjectUrl)try{URL.revokeObjectURL(img._diskObjectUrl)}catch{}}
 async function writeDiskIndex(){
   if(!diskProjectRootHandle)return;const ps=getProjects();
-  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.37',updatedAt:new Date().toISOString(),deletions:getDeletionRecords(),projects:filterDeletedProjects(ps).map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
+  await writeJson(diskProjectRootHandle,'mtg-proxy-builder.json',{format:'MTGProxyBuilderFolder',schema:DISK_SCHEMA,builderVersion:'43.39',updatedAt:new Date().toISOString(),deletions:getDeletionRecords(),projects:filterDeletedProjects(ps).map(p=>({id:p.id,name:p.name,updatedAt:p.updatedAt,cards:(p.cards||[]).map(c=>({id:c.id,name:c.name,updatedAt:c.updatedAt}))}))});
 }
 async function diskProjectDirs(project,card,create=true){
   const projects=await getDir(diskProjectRootHandle,'Projects',create),pd=await getDir(projects,'project_'+project.id,create),cards=await getDir(pd,'Cards',create),cd=card?await getDir(cards,'card_'+card.id,create):null;return {projects,pd,cards,cd};
@@ -4927,7 +4942,7 @@ const ffHistory4337={undo:[],redo:[],restoring:false,limit:60,context:null};
 function ffHistoryContext4337(){return String(currentProjectId||'')+'|'+String(currentProjectCardId||'')+'|'+String($('#cardName')?.value||'')}
 function ffHistorySnapshot4337(){return JSON.stringify({layers:state.freeform.layers.map(l=>({...l})),selected:state.freeform.selected})}
 function ffHistoryButtons4337(){
- // v43.38: Reconcile identity before showing history availability, not on click.
+ // v43.39: Reconcile identity before showing history availability, not on click.
  const context=ffHistoryContext4337();
  if(ffHistory4337.context!==context){ffHistory4337.context=context;ffHistory4337.undo=[];ffHistory4337.redo=[]}
  const a=$('#ffUndo4337'),b=$('#ffRedo4337');if(a)a.disabled=!ffHistory4337.undo.length;if(b)b.disabled=!ffHistory4337.redo.length;
@@ -5366,6 +5381,24 @@ if($('#fetchStatus') && !state.card) $('#fetchStatus').textContent='App ready �
 
 // v43.15: reconnect a previously granted project folder without opening a picker.
 window.addEventListener('DOMContentLoaded',()=>{restoreRememberedDiskFolder().then(h=>{if(h)loadProjectsFromDiskFolder().catch(()=>{})}).catch(()=>{})});
+
+
+// v43.39 Frame Library: persistent user-supplied PNG assets, kept separate from card records.
+const FRAME_DB_NAME='mtg-proxy-frame-library-v1';
+function frameDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(FRAME_DB_NAME,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('frames'))req.result.createObjectStore('frames',{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+async function frameTransaction(mode,fn){const db=await frameDb();try{return await new Promise((resolve,reject)=>{const tx=db.transaction('frames',mode),store=tx.objectStore('frames');let result;tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);const req=fn(store);req.onsuccess=()=>{result=req.result};req.onerror=()=>reject(req.error)})}finally{db.close()}}
+const frameGet=id=>frameTransaction('readonly',s=>s.get(id));
+const frameAll=()=>frameTransaction('readonly',s=>s.getAll());
+const framePut=record=>frameTransaction('readwrite',s=>s.put(record));
+const frameDelete=id=>frameTransaction('readwrite',s=>s.delete(id));
+function frameStatus(message){const el=$('#libraryStatus');if(el)el.textContent=message}
+async function refreshFrameLibrary(selected){try{const items=await frameAll(),sel=$('#librarySelect');if(!sel)return;sel.replaceChildren();const blank=document.createElement('option');blank.value='';blank.textContent=items.length?'Select a saved frame':'No frames imported';sel.append(blank);items.sort((a,b)=>a.category.localeCompare(b.category)||a.name.localeCompare(b.name));for(const item of items){const opt=document.createElement('option');opt.value=item.id;opt.textContent=`${item.category} / ${item.name} (${item.piece})`;sel.append(opt)}if(selected)sel.value=selected;frameStatus(`${items.length} frame${items.length===1?'':'s'} in this browser's library.`)}catch(e){console.error(e);frameStatus('Frame storage unavailable. Check browser storage permissions.')}}
+$('#libraryImport')?.addEventListener('change',async e=>{const files=[...(e.target.files||[])];let last=null,done=0;for(const file of files){try{if(file.type!=='image/png'&&!file.name.toLowerCase().endsWith('.png'))throw Error('PNG only');const img=await fileToImage(file);if(!img.naturalWidth||!img.naturalHeight)throw Error('Invalid image');const id=(crypto.randomUUID?.()||String(Date.now())+'-'+Math.random());await framePut({id,name:file.name.replace(/\.png$/i,''),category:$('#libraryCategory').value,piece:$('#libraryPiece').value,width:img.naturalWidth,height:img.naturalHeight,blob:file,addedAt:Date.now()});last=id;done++}catch(err){console.error(err);frameStatus(`Could not import ${file.name}: ${err.message}`)}}e.target.value='';await refreshFrameLibrary(last);if(done)frameStatus(`Imported ${done} PNG frame${done===1?'':'s'}. Stored in this browser.`)});
+$('#libraryApply')?.addEventListener('click',async()=>{const id=$('#librarySelect')?.value;if(!id)return frameStatus('Select a frame first.');try{const item=await frameGet(id);if(!item)return frameStatus('Frame not found.');const img=await fileToImage(item.blob);state.frameGraphics[item.piece]=img;const enabled=$('#frameGraphicsEnabled');if(enabled)enabled.checked=true;const target=$('#frameEditTarget');if(target)target.value=item.piece;syncFrameTransformControls();scheduleRender();frameStatus(`Applied ${item.name} to ${item.piece}. Save your card to retain this frame.`)}catch(err){console.error(err);frameStatus(`Could not apply frame: ${err.message}`)}});
+$('#libraryRemove')?.addEventListener('click',async()=>{const id=$('#librarySelect')?.value;if(!id)return frameStatus('Select a frame first.');if(!confirm('Delete this frame from your browser library? Existing card copies are not changed.'))return;try{await frameDelete(id);await refreshFrameLibrary();frameStatus('Frame deleted from library; existing cards remain unchanged.')}catch(err){frameStatus('Delete failed: '+err.message)}});
+$('#libraryExport')?.addEventListener('click',async()=>{const id=$('#librarySelect')?.value;if(!id)return frameStatus('Select a frame first.');try{const item=await frameGet(id),url=URL.createObjectURL(item.blob),a=document.createElement('a');a.href=url;a.download=item.name+'.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}catch(err){frameStatus('Export failed: '+err.message)}});
+$('#libraryRefresh')?.addEventListener('click',()=>refreshFrameLibrary());
+refreshFrameLibrary();
 
 </script>
 <div id="appToast" class="app-toast" role="status" aria-live="polite"></div>
